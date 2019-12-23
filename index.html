@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>8085 Emulator</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono:300,400,400i,700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="css/general.css">
+</head>
+<body>
+	<h1>8085 Sim</h1>
+	<div id="load-code"class="toast hidden">Loaded code!</div>
+	<div id="wrapper">
+	<div class="display-helper--container">
+		<div class="display">
+			<input onClick="this.select(); buttons.setMode('inputAddress');" class="display-cell" type="text" value="" id="data-input-0" maxlength="1"/>
+			<input onClick="this.select(); buttons.setMode('inputAddress');" class="display-cell" type="text" value="" id="data-input-1" maxlength="1"/>
+			<input onClick="this.select(); buttons.setMode('inputAddress');" class="display-cell" type="text" value="" id="data-input-2" maxlength="1"/>
+			<input onClick="this.select(); buttons.setMode('inputAddress');" class="display-cell" type="text" value="" id="data-input-3" maxlength="1"/>
+			<input onClick="this.select(); buttons.setMode('inputData');" class="display-cell" type="text" value="" id="data-input-4" maxlength="1"/>
+			<input onClick="this.select(); buttons.setMode('inputData');" class="display-cell" type="text" value="" id="data-input-5" maxlength="1"/>
+		</div>
+		<div class="helper-text">
+			<span class="helper">
+				<span id="helper-microcode"></span>
+				<span id="complete-instruction"></span>
+			</span>
+		</div>
+		<div class="helper-text helper-text-description">
+			<span class="helper">
+				<span id="instr-heading"></span>
+				<span id="instr-description"></span>
+			</span>
+		</div>
+	</div>
+	<div class="register-buttons--container">
+		<div class="keypad-buttons--container">
+			<span class="keypad-button" id="button-C"> C </span>
+			<span class="keypad-button" id="button-D"> D </span>
+			<span class="keypad-button" id="button-E"> E </span>
+			<span class="keypad-button" id="button-F"> F </span>
+			<span class="keypad-button" id="button-8"> 8 </span>
+			<span class="keypad-button" id="button-9"> 9 </span>
+			<span class="keypad-button" id="button-A"> A </span>
+			<span class="keypad-button" id="button-B"> B </span>
+			<span class="keypad-button" id="button-4"> 4 </span>
+			<span class="keypad-button" id="button-5"> 5 </span>
+			<span class="keypad-button" id="button-6"> 6 </span>
+			<span class="keypad-button" id="button-7"> 7 </span>
+			<span class="keypad-button" id="button-0"> 0 </span>
+			<span class="keypad-button" id="button-1"> 1 </span>
+			<span class="keypad-button" id="button-2"> 2 </span>
+			<span class="keypad-button" id="button-3"> 3 </span>
+		</div>
+		<div class="extra-buttons--container">
+			<span class="extra-button" id="button-RES">  <u>R</u>ES  </span>
+			<span class="extra-button" id="button-INR">  <u>I</u>NR  </span>
+			<span class="extra-button" id="button-GO">   G<u>O</u>   </span>
+			<span class="extra-button" id="button-REG">  RE<u>G</u>  </span>
+			<span class="extra-button" id="button-SET">  <u>S</u>ET  </span>
+			<span class="extra-button" id="button-DCR">  D<u>C</u>R  </span>
+			<span class="extra-button" id="button-EXEC"> E<u>X</u>EC </span>
+			<span class="extra-button" id="button-STEP"> STE<u>P</u> </span>
+		</div>
+		<div class="registers--container">
+			<span class="register half" id="register-A"> <i> 00 </i> <em>H</em> <b>A</b>  </span>
+			<span class="register half" id="register-F"> <i></i>  
+				<span class="register-flags" id="flag-S">  0 </span>
+				<span class="register-flags" id="flag-Z">  0 </span>
+				<span class="register-flags empty">        X </span>
+				<span class="register-flags" id="flag-AC"> 0 </span>
+				<span class="register-flags empty">        X </span>
+				<span class="register-flags" id="flag-P">  0 </span>
+				<span class="register-flags empty">        X </span>
+				<span class="register-flags" id="flag-CY"> 0 </span>
+			</span> <br/>
+			<span class="register half" id="register-B"> <i> 00 </i> <em>H</em> <b>B</b>  </span>
+			<span class="register half" id="register-C"> <i> 00 </i> <em>H</em> <b>C</b>  </span> <br/>
+			<span class="register half" id="register-D"> <i> 00 </i> <em>H</em> <b>D</b>  </span>
+			<span class="register half" id="register-E"> <i> 00 </i> <em>H</em> <b>E</b>  </span> <br/>
+			<span class="register half" id="register-H"> <i> 00 </i> <em>H</em> <b>H</b>  </span>
+			<span class="register half" id="register-L"> <i> 00 </i> <em>H</em> <b>L</b>  </span> <br/>
+			<span class="register full" id="register-SP"><i>0000</i> <em>H</em> <b>SP</b> </span> <br/>
+			<span class="register full" id="register-PC"><i>0000</i> <em>H</em> <b>PC</b> </span>
+		</div>	
+	</div>
+	</div>
+	
+	<script type="text/javascript" src="js/assembler/expr-eval.js"></script>
+	<script type="text/javascript" src="js/assembler/textParser.js"></script>
+	<script type="text/javascript" src="js/assembler/preprocessor.js"></script>
+
+	<div id="pbus"></div>
+	<!-- No requires (Base requires) -->
+	<script type="text/javascript" src="js/base/pbus.js"></script>
+	<script type="text/javascript" src="js/base/details.js"></script>
+	<script type="text/javascript" src="js/base/memory.js"></script>
+	<script type="text/javascript" src="js/base/counter.js"></script>
+	<script type="text/javascript" src="js/base/conversion.js"></script>
+	<script type="text/javascript" src="js/base/microcodes.js"></script>
+
+	<!-- Requires one or more of baserequires (L0 requires) -->
+	<script type="text/javascript" src="js/hardware/registers.js"></script>
+	<script type="text/javascript" src="js/hardware/display.js"></script> <!-- Dependent on DOM -->
+	<script type="text/javascript" src="js/hardware/adder.js"></script>
+	<script type="text/javascript" src="js/hardware/logical.js"></script>
+	<script type="text/javascript" src="js/hardware/shifter.js"></script>
+
+	<!-- Requires one or more of L1 requires -->
+	<script type="text/javascript" src="js/manipulators/input.js"></script> <!-- Dependant on DOM-->
+	<script type="text/javascript" src="js/manipulators/keyboardHooks.js"></script> <!-- Dependant on DOM-->
+	<script type="text/javascript" src="js/manipulators/registerDisplay.js"></script>
+
+	<!-- Requires one or more of L2 requires -->
+	<script type="text/javascript" src="js/funcs/dict.js"></script>
+	<script type="text/javascript" src="js/funcs/dataMovement.js"></script>
+	<script type="text/javascript" src="js/funcs/arithmetic.js"></script>
+	<script type="text/javascript" src="js/funcs/logical.js"></script>
+	<script type="text/javascript" src="js/funcs/branch.js"></script>
+	<script type="text/javascript" src="js/funcs/stack.js"></script>
+
+	<!-- Requires one or more of L4 requires -->
+	<script type="text/javascript" src="js/runner/loader.js"></script>
+	<script type="text/javascript" src="js/runner/runner.js"></script>
+</body>
+</html>
