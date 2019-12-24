@@ -1,24 +1,27 @@
 assembler.macro = {}
 
+assembler.macro.isMacro = function(at) {
+	var doc = assembler.stateObject.document;
+	var tokens = 1;
+	if(doc[at][tokens][0].slice(-1) == ':')
+		return doc[at][tokens][1] == 'macro' || doc[at][tokens][1] == 'MACRO';
+	else 
+		return doc[at][tokens][0] == 'macro' || doc[at][tokens][0] == 'MACRO';
+}
 assembler.macro.getMacroEndLine = function(at, lines) {
 	at = parseInt(at);
 	var tokens = 1;
 
-	console.log("GETTING ENDLINE", at, lines);
 	var doc;
 
 	if(lines == undefined){ 
 		doc = assembler.stateObject.document;
-	}else{
+	} else {
 		doc = lines;
 	}
 
-
 	var i = at + 1;
 	var sp = 1;
-
-	console.log(">>>", doc, i, sp);
-
 
 	while(i < doc.length && sp != 0) {
 		if(doc[i][tokens].includes('MACRO') || doc[i][tokens].includes('macro'))
@@ -38,6 +41,7 @@ assembler.macro.getMacroFromLine = function(at) {
 	var tokens = 1;
 	var end = assembler.macro.getMacroEndLine(at);
 	var doc = assembler.stateObject.document;
+	var body = [];
 	var localsDirectory = [];
 
 	var i = parseInt(at) + 1;
@@ -45,10 +49,11 @@ assembler.macro.getMacroFromLine = function(at) {
 		if(doc[i][tokens][0][0] == '/')	
 			localsDirectory.push(doc[i][tokens][0].slice(0,-1));
 		if(doc[i][tokens][0] == 'LOCAL'){
-			console.log("FOUNDLOCAL");
-			console.log("LOCALS ARE", doc[i][tokens].slice(1));
 			localsDirectory.push.apply(localsDirectory, doc[i][tokens].slice(1));
+			++i;
+			continue;
 		}
+		body.push(doc[i]); 		//Append line to body.
 		++i;
 	}
 
@@ -58,7 +63,7 @@ assembler.macro.getMacroFromLine = function(at) {
 		definition: definition,
 		name: definition[tokens][0].slice(0, -1),
 		args: definition[tokens].slice(2),
-		body: doc.slice(at + 1, end),
+		body: body,
 		locals: localsDirectory,
 		index: 0
 	});
@@ -151,14 +156,12 @@ assembler.macro.mangleLocals = function(body, locals, index) {
 		}
 		modlines.push(line);
 	}
-	console.log("AFTERMANGLE", modlines);
 	return modlines;
 }
 
 assembler.macro.expandArgs = function(body, arglist, values) {
 	var modlines = [];
 	var tokens = 1;
-	console.log("STARTING ARGEXPN")
 	for(var lines in body) {
 		var line = body[lines].slice();
 		for(var arg in arglist) {
@@ -174,7 +177,6 @@ assembler.macro.expandArgs = function(body, arglist, values) {
 		modlines.push(line);
 	}
 
-	console.log("AFTEREXPANSION", modlines);
 	return modlines;
 }
 

@@ -1,5 +1,12 @@
 assembler.parser = {
-	exprParser: new exprEval.Parser()
+	exprParser: new exprEval.Parser({
+		operators: {
+			logical: true,
+			comparison: true,
+			'in': true,
+			assignment: false
+		}
+	})
 }
 
 /*
