@@ -2,6 +2,7 @@
 ** Quirks: Treats empty IF or ELIF statements as ELSE statements and arg-containing ELSEs
 **         as IF or ELIF, i.e., function of IF ELSE and ELIF are equivalent. The number of
 **         tokens as the conditional determines what it will be parsed as.
+**     and All values must be decimal for it to work properly.
 */
 
 assembler.conditional = {} //register module.
@@ -101,7 +102,12 @@ assembler.conditional.constructDTree = function(at) {
 assembler.conditional.processDTree = function(dtree, symtab) {
     for(var node in dtree) {
         var condition = dtree[node].condition.join(' ');
+
         var evaluated = assembler.parser.parseExpr(condition, symtab);
+
+        if(evaluated == false)
+            return false;
+
         if(condition == '' || evaluated == true || (evaluated != false && evaluated != 0)) {
             return dtree[node].body;
         }
