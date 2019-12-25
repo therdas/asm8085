@@ -33,13 +33,18 @@ assembler.macro.getMacroEndLine = function(at, lines) {
 		++i;
 	}
 
-	if(sp != 0) throw new Error;
+	if(sp != 0) assembler.stateObject.addError('AMMACRO_NOEND', at);
+	return false;
 }
-
+//@FALSES AT: AMMACRO_NONAME, 
 assembler.macro.getMacroFromLine = function(at) {
 	at = parseInt(at);
 	var tokens = 1;
 	var end = assembler.macro.getMacroEndLine(at);
+
+	if(end == false)
+		return false;
+
 	var doc = assembler.stateObject.document;
 	var body = [];
 	var localsDirectory = [];
@@ -59,14 +64,23 @@ assembler.macro.getMacroFromLine = function(at) {
 
 	var definition = doc[at];
 
-	assembler.stateObject.macroTable.push({
+	if(definition[tokens][0].slice(-1) != ':'){
+		assembler.stateObject.addError('AMMACRO_NONAME', at);
+		return false;
+	}
+
+	var macroObject = {
 		definition: definition,
 		name: definition[tokens][0].slice(0, -1),
 		args: definition[tokens].slice(2),
 		body: body,
 		locals: localsDirectory,
 		index: 0
-	});
+	};
+
+	assembler.stateObject.macroTable.push(macroObject);
+	assembler.stateObject.macroLookupTable[definition[tokens][0].slice(0, -1)] = assembler.stateObject.macroTable.length - 1;
+	return true;
 }
 
 assembler.macro.cleanMacros = function() {
@@ -80,6 +94,10 @@ assembler.macro.cleanMacros = function() {
 				macroTable[macro].body[line][tokens].includes('MACRO')
 			  ) {
 				var end = assembler.macro.getMacroEndLine(line, macroTable[macro].body);
+
+				if(end == false)
+					return false;
+
 				var cleaned = macroTable[macro].body.slice(0, line);
 				cleaned.push.apply(cleaned, macroTable[macro].body.slice(end + 1));
 
@@ -88,21 +106,28 @@ assembler.macro.cleanMacros = function() {
 			++line;
 		}
 	}
+	return true;
 }
 
-assembler.macro.populateMacroTable = function() {
+assembler.macro.populateMacroTables = function() {
 	var doc = assembler.stateObject.document;
 	var tokens = 1;
+	var ok = true;
 
 	//Clean Macro Table
 	assembler.stateObject.macroTable = [];
 
 	//Create macros
 	for(var line in doc)
-		if(doc[line][tokens].includes('MACRO') || doc[line][tokens].includes('macro'))
-			assembler.macro.getMacroFromLine(line);
+		if(doc[line][tokens].includes('MACRO') || doc[line][tokens].includes('macro')){
+			var current = assembler.macro.getMacroFromLine(line);
+			ok = ok ? current: false;
+		}
 
-	assembler.macro.cleanMacros();
+	if(ok)
+		assembler.macro.cleanMacros();
+	else
+		return false;
 }
 
 assembler.macro.removeSingleMacro = function(at) {
@@ -111,6 +136,11 @@ assembler.macro.removeSingleMacro = function(at) {
 
 	var final = doc.slice(0, at);
 	var end = assembler.macro.getMacroEndLine(at);
+
+	if(end == false) {
+		return false;
+	}
+
 	final.push.apply(final, doc.slice(end + 1));
 
 	assembler.stateObject.document = final;
@@ -160,6 +190,11 @@ assembler.macro.mangleLocals = function(body, locals, index) {
 }
 
 assembler.macro.expandArgs = function(body, arglist, values) {
+	if(arglist.length != values.length){
+		assembler.stateObject.addError('AMMACRO_ARGMISMATCH', body[0][0]);
+		return false;
+	}
+
 	var modlines = [];
 	var tokens = 1;
 	for(var lines in body) {
@@ -183,6 +218,6 @@ assembler.macro.expandArgs = function(body, arglist, values) {
 assembler.macro.expandMacro = function(macro, arglist, index) {
 	var body = macro.body;
 	var afterMangling = assembler.macro.mangleLocals(body, macro.locals, index);
-	var afterExpansion = assembler.macro.expandArgs(body, macro.args, arglist);
+	var afterExpansion = assembler.macro.expandArgs(afterMangling, macro.args, arglist);
 	return afterExpansion;
 }

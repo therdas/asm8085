@@ -3,6 +3,11 @@
 ** Quirks: All values should be in decimal.
 */
 
+/* Module communicates with assembler with exceptions to reduce code module-side
+** Thrown errors: CMDUP_NOEND: Dup end line not found  
+** These errors MUST be implemented in any module implementing macros.     
+*/
+
 assembler.dup = { }
 
 assembler.dup.getEndLine = (at) => {
@@ -22,10 +27,10 @@ assembler.dup.getEndLine = (at) => {
 		++i;
     }
     
-    if(sp != 0) throw new Error;
+    if(sp != 0) throw "CMDUP_NOEND";
 }
 
-assembler.dup.expand = (from) => {
+assembler.dup.expand = (from, symtab) => {
     from = parseInt(from);
     var to = assembler.dup.getEndLine(from);
     var condition = '';
@@ -34,18 +39,20 @@ assembler.dup.expand = (from) => {
     var toReturn = [];
 
     if(doc[from][tokens][0].slice(-1) == ':')
-        condition = doc[from][tokens][0].slice(2).join(' ');
+        condition = doc[from][tokens].slice(2).join(' ');
     else 
-        condition = doc[from][tokens][0].slice(1).join(' ');
+        condition = doc[from][tokens].slice(1).join(' ');
     
     times = assembler.parser.parseExpr(condition, symtab);
     if(times == false || assembler.parser.isDec(times) == false)
-        throw new Error();
+        return false;
+    console.log(times);
     
     var times = parseInt(times);
     var toCopy = doc.slice(from+1, to);
+    console.log(from+1, to, toCopy);
     for(var i = 0; i < times; ++i)
-        toReturn.push.apply(toCopy);
+        toReturn.push.apply(toReturn, toCopy);
 
     return toReturn;
 }

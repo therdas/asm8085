@@ -5,6 +5,11 @@
 **     and All values must be decimal for it to work properly.
 */
 
+/* Module communicates with assembler with exceptions to reduce code module-side
+** Thrown errors: CMCOND_NOEND: If end line not found    
+** These errors MUST be implemented in any module implementing macros.     
+*/
+
 assembler.conditional = {} //register module.
 
 assembler.conditional.isConditional = function(at) {
@@ -42,7 +47,7 @@ assembler.conditional.getIfEndLine = function(at, lines) {
 		++i;
 	}
 
-	if(sp != 0) throw new Error;
+	if(sp != 0) throw "CMCOND_NOEND";
 }
 
 assembler.conditional.constructDTree = function(at) {
