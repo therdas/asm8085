@@ -51,7 +51,7 @@ assembler.getMacrosAndClean = function() {
 }
 
 /*Pass 2: Process IF/ELIF/ELSE/ENDIF, MACRO calls, DUP/ENDD, EQU*/
-assembler.processExtensions = function() {
+/*assembler.processExtensions = function() {
     var doc = assembler.stateObject.rawDocument;
     var line = 0;
     var tokens = 1;
@@ -66,4 +66,4 @@ assembler.processExtensions = function() {
         var primary = hasLabel ? doc[line][tokens][1] : doc[line][tokens][0];
         if(primary)
     }
-}
+}*/

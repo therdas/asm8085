@@ -116,6 +116,7 @@ assembler.macro.populateMacroTables = function() {
 
 	//Clean Macro Table
 	assembler.stateObject.macroTable = [];
+	assembler.stateObject.macroLookupTable = {	};
 
 	//Create macros
 	for(var line in doc)
