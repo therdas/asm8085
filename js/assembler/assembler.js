@@ -10,6 +10,7 @@ assembler.stateObject = {
         hexadecimal: {}
     },
     referenceTable: {},
+    codePointTable: {},
     errors: [],
     warnings: []
 };
@@ -51,15 +52,13 @@ assembler.getMacrosAndClean = function() {
     return false;
 }
 
-/*Pass 2: Process IF/ELIF/ELSE/ENDIF, MACRO calls, DUP/ENDD, EQU*/
+/*Pass 2: Process IF/ELIF/ELSE/ENDIF, MACRO calls, DUP/ENDD, EQU, EQU replacement*/
 assembler.processExtensions = function() {
     var doc = assembler.stateObject.document;
     var line = 0;
     var tokens = 1;
 
     while(line < doc.length) {
-        if(line > 50) break;
-
         var hasLabel = false;
 
         if(doc[line][tokens][0].slice(-1) == ':')
@@ -72,7 +71,17 @@ assembler.processExtensions = function() {
             continue;
         }
 
-        if(assembler.stateObject.isMacro(primary)) {
+        for(var token = hasLabel ? 2 : 1; token < doc[line][tokens].length; ++token) {
+            if(
+                doc[line][tokens][token][0] == '{' &&
+                doc[line][tokens][token].slice(-1) == '}'
+              )
+                doc[line][tokens][token] = doc[line][tokens][token].slice(1,-1);
+
+            doc[line][tokens][token] = assembler.symbol.processToken(doc[line][tokens][token]);
+        }
+
+        if (assembler.stateObject.isMacro(primary)) {
             var expanded = assembler.macro.expandMacro(
                 assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]],
                 hasLabel ? doc[line][tokens].slice(2) : doc[line][tokens].slice(1),
@@ -92,8 +101,7 @@ assembler.processExtensions = function() {
             temp.push.apply(temp, doc.slice(line+1));
             assembler.stateObject.document = temp;
             doc = assembler.stateObject.document;
-
-        } else if(assembler.stateObject.isCond(primary)) {
+        } else if (assembler.stateObject.isCond(primary)) {
             var dtree = assembler.conditional.constructDTree(line);
 
             if(dtree == false) {
@@ -113,15 +121,12 @@ assembler.processExtensions = function() {
                 assembler.stateObject.addWarning('ASM_PE_EMPTYBODY', line);
                 ++line; continue;
             }
-            console.log(line, end);
-            console.log(resolved);
             var temp = doc.slice(0, line);
             temp.push.apply(temp, resolved);
             temp.push.apply(temp, doc.slice(end + 1));
             assembler.stateObject.document = temp;
             doc = assembler.stateObject.document;
-
-        } else if(assembler.stateObject.isDup(primary)) {
+        } else if (assembler.stateObject.isDup(primary)) {
             var end = assembler.dup.getEndLine(line);
             var toReplace = assembler.dup.expand(line, assembler.stateObject.symbolTable.decimal);
             
@@ -132,17 +137,29 @@ assembler.processExtensions = function() {
 
             var temp = doc.slice(0, line);
             temp.push.apply(temp, toReplace);
-            temp.push.apply(temp, doc.slice(line + 1));
+            temp.push.apply(temp, doc.slice(end + 1));
             assembler.stateObject.document = temp;
             doc = assembler.stateObject.document;
-
-        } else if(assembler.stateObject.isEqu(primary)) {
+        } else if (assembler.stateObject.isEqu(primary)) {
             assembler.symbol.registerSymbol(line, assembler.stateObject.symbolTable.decimal);
-            var temp = doc.slice(line);
+            var temp = doc.slice(0,line);
             temp.push.apply(temp, doc.slice(line+1));
             assembler.stateObject.document = temp;
             doc = assembler.stateObject.document;
-        }
-        ++line;
+        } else 
+            ++line;
+    }
+}
+
+assembler.gatherReferences = () => {
+    var doc = assembler.stateObject.document;
+    var tokens = 1;
+    for(var line in doc) {
+        if(doc[line][tokens][0].slice(-1) != ':')
+            continue;
+
+        var label = doc[line][tokens][0].slice(0,-1);
+        
+        assembler.stateObject.referenceTable[label] = line;
     }
 }

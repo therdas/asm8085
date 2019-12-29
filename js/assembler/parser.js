@@ -65,12 +65,13 @@ assembler.parser.incrementHex = function (hex){
 	return pad((parseInt(hex, 16) + 1).toString(16), 4).toUpperCase();
 }
 
+/*NO SPLIT AT {...} for evaluation purposes.*/
 assembler.parser.tokenize = function(string) {
 	var lines = string.split('\n');
 	var tokens = [];
 	for(var i in lines) {
 		tokens[i] = [];
-		tokens[i][1] = lines[i].trim().split(/[\s,]+/);
+		tokens[i][1] = lines[i].trim().split(/[\s,]+(?![^{]*})/);
 		tokens[i][1] = tokens[i][1].filter(n => n);
 		tokens[i][0] = i;
 	}
