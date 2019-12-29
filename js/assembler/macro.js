@@ -125,8 +125,10 @@ assembler.macro.populateMacroTables = function() {
 			ok = ok ? current: false;
 		}
 
-	if(ok)
+	if(ok){
 		assembler.macro.cleanMacros();
+		return true;
+	}
 	else
 		return false;
 }
@@ -203,6 +205,10 @@ assembler.macro.expandArgs = function(body, arglist, values) {
 		for(var arg in arglist) {
 			var index = line[tokens].indexOf(arglist[arg]);
 			while(index != -1){
+				
+				if(line[tokens][index] == values[arg])
+					break;
+
 				line[tokens][index] = values[arg];
 				var index = line[tokens].indexOf(arglist[arg]);
 			}

@@ -27,7 +27,10 @@ assembler.dup.getEndLine = (at) => {
 		++i;
     }
     
-    if(sp != 0) throw "CMDUP_NOEND";
+    if(sp != 0) {
+        assembler.stateObject.addError('AMDUP_NOEND', at);
+        return false;
+    }
 }
 
 assembler.dup.expand = (from, symtab) => {
@@ -44,13 +47,14 @@ assembler.dup.expand = (from, symtab) => {
         condition = doc[from][tokens].slice(1).join(' ');
     
     times = assembler.parser.parseExpr(condition, symtab);
-    if(times == false || assembler.parser.isDec(times) == false)
+    if(times == false || assembler.parser.isDec(times) == false){
+        assembler.stateObject.addError('AMDUP_IMPROPERVAL', from);
         return false;
-    console.log(times);
+    }
     
     var times = parseInt(times);
     var toCopy = doc.slice(from+1, to);
-    console.log(from+1, to, toCopy);
+    
     for(var i = 0; i < times; ++i)
         toReturn.push.apply(toReturn, toCopy);
 

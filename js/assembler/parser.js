@@ -117,7 +117,7 @@ assembler.parser.parseVal = function(value, decSymbolTable) {
 		else if(assembler.parser.isHex(value))
 			return value;
 		else
-			return assembler.parser.parseExpr(value, decSymbolTable).toString(16);
+			return assembler.parser.parseExpr(value, decSymbolTable).toString(16).toUpperCase();
 	} else {
 		if(assembler.parser.isHexWithoutSuffix(value))
 			return value;
