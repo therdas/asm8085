@@ -11,12 +11,13 @@ assembler.stateObject = {
     },
     referenceTable: {},
     codePointTable: {},
+	listing: {},
     errors: [],
     warnings: []
 };
 
-assembler.stateObject.addError = (message, line) => assembler.stateObject.errors.push({body: message, at: line});
-assembler.stateObject.addWarning = (message, line) => assembler.stateObject.warnings.push({body: message, at: line});
+assembler.stateObject.addError = (message, line, info) => assembler.stateObject.errors.push({body: message, at: line, context: info == undefined ? false : info});
+assembler.stateObject.addWarning = (message, line, info) => assembler.stateObject.warnings.push({body: message, at: line, context: info == undefined ? false: info});
 assembler.stateObject.isMacro = (token) => assembler.stateObject.macroLookupTable.hasOwnProperty(token);
 assembler.stateObject.isDup = (token) => (token == 'dup' || token == 'DUP');
 assembler.stateObject.isCond = (token) => (token == 'if' || token == 'IF');
@@ -162,4 +163,61 @@ assembler.gatherReferences = () => {
         
         assembler.stateObject.referenceTable[label] = line;
     }
+}
+
+assembler.assembleCode = () => {
+	var current = '0000';
+	var doc = assembler.stateObject.document;
+	var tokens = 1;
+	for(var line in doc) {
+		assembler.stateObject.codePointTable[line] = current;
+
+		var hasLabel = false;
+
+		if(doc[line][tokens][0].slice(-1) == ':')
+			hasLabel = true;
+
+		var keyword = doc[line][tokens][hasLabel ? 1 : 0];
+		var fmt = assembler.format[keyword];
+
+		if(fmt == undefined) {
+			assembler.stateObject.addError('ASM_ASM_INVALIDKEYWORD', line, {key: keyword});
+			continue;
+		}
+
+		var args = doc[line][tokens].slice(hasLabel ? 2 : 1);
+		if(args.length != fmt.length) {
+			assembler.stateObject.addError('ASM_ASM_WRONGNOOFARGS', line, {needs: fmt.length, has: args.length});
+			continue;
+		}
+
+		var accessors = [];
+
+		for(var i in args)
+			if(fmt[i] == '8-bit' || fmt[i] == '16-bit')
+				args[i] = assembler.parser.parseVal(args[i], assembler.stateObject.symbolTable.decimal);
+
+		for(var i in args) {
+			if(fmt[i] == '8-bit'){
+				if(arg[i].length > 2) {
+					assembler.stateObject.addWarning('ASM_ASM_TOOLONG8', line, {value: arg[i]});
+					arg[i] = arg[i].slice(-2);
+				} else {
+					arg[i] = assembler.parser.pad(arg[i], 2);
+				}
+			} else if(fmt[i] == '16-bit') {
+				if(arg[i].length > 4) {
+					assembler.stateObject.addWarning('ASM_ASM_TOOLONG16', line, {value: arg[i]});
+					arg[i] = arg[i].slice(-4);
+				} else {
+					arg[i] = assembler.parser.pad(arg[i], 4);
+				}
+			}
+		}
+
+		for(var i in args) 
+			accessors.push(assembler.parser.getAccessor(arg));
+
+
+	}
 }

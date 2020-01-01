@@ -62,7 +62,7 @@ assembler.parser.incrementHex = function (hex){
 	if(hex == 'FFFF')
 		return '0000';
 
-	return pad((parseInt(hex, 16) + 1).toString(16), 4).toUpperCase();
+	return assembler.parser.pad((parseInt(hex, 16) + 1).toString(16), 4).toUpperCase();
 }
 
 /*NO SPLIT AT {...} for evaluation purposes.*/
@@ -142,4 +142,17 @@ assembler.parser.getAccessor = function(value) {
 		return '8-bit';										//EG MVI A, F5H
 	
 	return false;
+}
+
+//Pad a number with `z`
+/* If less than width
+//   Create a new array of length of missing number of padding elements
+//   Join that with `z`
+//		Since array contained `undefined` joining results in only `z`'s
+//	 Append n to it
+*/
+assembler.parser.pad = function (n, width, z) {
+	z = z || '0';
+	n = n + '';
+	return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }

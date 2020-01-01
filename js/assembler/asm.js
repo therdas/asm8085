@@ -14,3 +14,21 @@ function AssemblerException(code, at) {
 }
 
 AssemblerException.prototype = Object.create(Error.prototype);
+
+//This uses the fact that if there is a immidiate address or operand
+//The operand will always be the last argument to a keyword
+//and futher returns false if it cannot find the keyword in its OPCODE table
+assembler.sizeOf = (keyword) => {
+	var format = assembler.format[keyword];
+	if(format == undefined)
+		return false;
+	var last = format.slice(-1);
+	
+	if(last == '8-bit')
+		return 2;
+	else if(last == '16-bit')
+		return 3;
+	else
+		return 1;
+	return false;
+}
