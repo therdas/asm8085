@@ -9,6 +9,8 @@ assembler.parser = {
 	})
 }
 
+assembler.parser.exprParser.consts = {};
+
 /*
 	functions in this module:
 		isHexWithoutSuffix(string)		without H suffix
@@ -39,6 +41,8 @@ assembler.parser.isDec = function (token) {
 }
 
 assembler.parser.type = function(token) {
+    token = token + '';
+
 	if(token.slice(-1) == 'H' && token.length > 1)
 		token = token.slice(0,-1);
 
@@ -117,8 +121,10 @@ assembler.parser.parseVal = function(value, decSymbolTable) {
 			return assembler.parser.hexFromDec(value);
 		else if(assembler.parser.isHex(value))
 			return value;
-		else
-			return assembler.parser.parseExpr(value, decSymbolTable).toString(16).toUpperCase();
+		else {
+			var res = assembler.parser.parseExpr(value, decSymbolTable).toString(16).toUpperCase();
+            return res == 'FALSE' ? false : res;
+        }
 	} else {
 		if(assembler.parser.isHexWithoutSuffix(value))
 			return value;

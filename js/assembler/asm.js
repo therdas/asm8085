@@ -13,6 +13,7 @@ function AssemblerException(code, at) {
     return error;
 }
 
+assembler.isLabelledKeyword = (keyword) => ['RET', 'JMP', 'CALL'].includes(keyword) || (keyword.length == 2 && ['R', 'J', 'C'].includes(keyword.slice(0,1))) || (keyword.length == 3 && ['RN', 'CN', 'JN'].includes(keyword.slice(0,2))) 
 AssemblerException.prototype = Object.create(Error.prototype);
 
 //This uses the fact that if there is a immidiate address or operand

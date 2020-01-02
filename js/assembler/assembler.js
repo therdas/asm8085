@@ -1,4 +1,5 @@
 //Directly augment assembler namespace.
+//To Do! Fix RST's accessors
 
 assembler.stateObject = {
     document: [],
@@ -78,12 +79,11 @@ assembler.processExtensions = function() {
                 doc[line][tokens][token].slice(-1) == '}'
               )
                 doc[line][tokens][token] = doc[line][tokens][token].slice(1,-1);
-
-            doc[line][tokens][token] = assembler.symbol.processToken(doc[line][tokens][token]);
+		doc[line][tokens][token] = assembler.symbol.processToken(doc[line][tokens][token]);
         }
 
         if (assembler.stateObject.isMacro(primary)) {
-            var expanded = assembler.macro.expandMacro(
+                var expanded = assembler.macro.expandMacro(
                 assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]],
                 hasLabel ? doc[line][tokens].slice(2) : doc[line][tokens].slice(1),
                 assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]].index++
@@ -117,8 +117,7 @@ assembler.processExtensions = function() {
             }
 
             var resolved = assembler.conditional.processDTree(dtree, assembler.stateObject.symbolTable.decimal);
-        
-            if(resolved == false) {
+        if(resolved == false) {
                 assembler.stateObject.addWarning('ASM_PE_EMPTYBODY', line);
                 ++line; continue;
             }
@@ -190,34 +189,41 @@ assembler.assembleCode = () => {
 			assembler.stateObject.addError('ASM_ASM_WRONGNOOFARGS', line, {needs: fmt.length, has: args.length});
 			continue;
 		}
+		console.log("original", args);
 
 		var accessors = [];
 
-		for(var i in args)
-			if(fmt[i] == '8-bit' || fmt[i] == '16-bit')
-				args[i] = assembler.parser.parseVal(args[i], assembler.stateObject.symbolTable.decimal);
+        //Type upgrading 
+        for(var i in args)
+            if(fmt[i] == '8-bit' || fmt[i] == '16-bit') {
+                var res = assembler.parser.parseVal(args[i], assembler.stateObject.symbolTable.decimal);
+                console.log("RESULT", res, "of", args[i]);
+                args[i] = res == false ? args[i] : res;
+                console.log(args);
+            }
 
-		for(var i in args) {
-			if(fmt[i] == '8-bit'){
-				if(arg[i].length > 2) {
-					assembler.stateObject.addWarning('ASM_ASM_TOOLONG8', line, {value: arg[i]});
-					arg[i] = arg[i].slice(-2);
-				} else {
-					arg[i] = assembler.parser.pad(arg[i], 2);
-				}
-			} else if(fmt[i] == '16-bit') {
-				if(arg[i].length > 4) {
-					assembler.stateObject.addWarning('ASM_ASM_TOOLONG16', line, {value: arg[i]});
-					arg[i] = arg[i].slice(-4);
-				} else {
-					arg[i] = assembler.parser.pad(arg[i], 4);
-				}
-			}
-		}
+        //Padding and width checking
+        for(var i in args) {
+            if(fmt[i] == '8-bit' && assembler.parser.isHex(args[i])){
+                if(args[i].length > 2) {
+                    assembler.stateObject.addWarning('ASM_ASM_TOOLONG8', line, {value: args[i]});
+                    args[i] = args[i].slice(-2);
+                } else {
+                    args[i] = assembler.parser.pad(args[i], 2);
+                }
+            } else if(fmt[i] == '16-bit' && assembler.parser.isHex(args[i])) {
+                if(args[i].length > 4) {
+                    assembler.stateObject.addWarning('ASM_ASM_TOOLONG16', line, {value: args[i]});
+                    args[i] = args[i].slice(-4);
+                } else {
+                    args[i] = assembler.parser.pad(args[i], 4);
+                }
+            }
+        }
 
-		for(var i in args) 
-			accessors.push(assembler.parser.getAccessor(arg));
-
+		for(var arg in args) 
+			accessors.push(assembler.parser.getAccessor(args[arg]));
+		console.log(">>::", accessors);
 
 	}
 }
