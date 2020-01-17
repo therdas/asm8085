@@ -22,8 +22,9 @@ assembler.stateObject.addWarning = (message, line, info) => assembler.stateObjec
 assembler.stateObject.isMacro = (token) => assembler.stateObject.macroLookupTable.hasOwnProperty(token);
 assembler.stateObject.isDup = (token) => (token == 'dup' || token == 'DUP');
 assembler.stateObject.isCond = (token) => (token == 'if' || token == 'IF');
-assembler.stateObject.isEqu = (token) => (token == 'equ' || token == 'EQU');
-
+assembler.stateObject.isEqu = (token) => (token == 'equ' || token == 'EQU' || token == '=');
+assembler.stateObject.isOrg = (token) => (token == 'org' || token == 'ORG');
+assembler.stateObject.isDef = (token) => (token == 'def' || token == 'DEF');
 
 assembler.tokenize = function() {
     assembler.stateObject.document = assembler.parser.tokenize(assembler.stateObject.rawDocument);
@@ -154,13 +155,54 @@ assembler.processExtensions = function() {
 assembler.gatherReferences = () => {
     var doc = assembler.stateObject.document;
     var tokens = 1;
+    var currentPoint = '0000';
+    
     for(var line in doc) {
-        if(doc[line][tokens][0].slice(-1) != ':')
-            continue;
-
-        var label = doc[line][tokens][0].slice(0,-1);
+        var hasLabel = false;
+        var isEqu = false;
+        console.log(line);
+        if(doc[line][tokens][0].slice(-1) == ':')
+            hasLabel = true;
         
-        assembler.stateObject.referenceTable[label] = line;
+        var keyword = doc[line][tokens][hasLabel ? 1 : 0];
+        if(assembler.stateObject.isOrg(keyword)) {
+            isEqu = true;
+            var next = assembler.parser.parseVal(
+                doc[line][tokens].slice(hasLabel ? 2 : 1).join(' '),
+                assembler.stateObject.symbolTable.decimal
+            );
+
+            if(next == false) {
+                assembler.stateObject.addError('ASM_ORG_INVALIDVALUE', line);
+                continue;
+            }
+            
+            if(next.length > 4) {
+                assembler.stateObject.addWarning('ASM_ORG_TOOLONG16', line, {value: next});
+                next = next.slice(-4);
+            }
+            
+            currentPoint = next;
+
+        }
+        
+        var size = assembler.sizeOf(keyword);
+        if(size == false && !isOrg) {
+            assembler.stateObject.addError('ASM_ORG_INVALIDKEYWORD', line, {value: keyword});
+            continue;
+        }
+        console.log(keyword, hasLabel, doc[line], "at",line, size);
+        if(hasLabel) {
+            var label = doc[line][tokens][0].slice(0,-1);     
+            assembler.stateObject.referenceTable[label] = line;
+        }
+        if(isEqu) {
+            continue;
+        } else {
+            assembler.stateObject.codePointTable[line] = currentPoint;
+            for(var _pt = 0; _pt < size; ++_pt)
+                currentPoint = assembler.parser.incrementHex(currentPoint);
+        }
     }
 }
 
