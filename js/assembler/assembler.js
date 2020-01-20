@@ -14,6 +14,7 @@ assembler.stateObject = {
     codePointTable: {},
 	listing: {},
     errors: [],
+    defbuffers: {},             //line -> buffer
     warnings: []
 };
 
@@ -25,6 +26,8 @@ assembler.stateObject.isCond = (token) => (token == 'if' || token == 'IF');
 assembler.stateObject.isEqu = (token) => (token == 'equ' || token == 'EQU' || token == '=');
 assembler.stateObject.isOrg = (token) => (token == 'org' || token == 'ORG');
 assembler.stateObject.isDef = (token) => (token == 'def' || token == 'DEF');
+assembler.stateObject.isDefarr = (token) => (token == 'defarr' || token == 'DEFARR');
+assembler.stateObject.isDdef = (token) => (token == 'ddef' || token == 'DDEF');
 
 assembler.tokenize = function() {
     assembler.stateObject.document = assembler.parser.tokenize(assembler.stateObject.rawDocument);
@@ -68,19 +71,23 @@ assembler.processExtensions = function() {
             hasLabel = true;
 
         var primary = hasLabel ? doc[line][tokens][1] : doc[line][tokens][0];
-        
+        console.log(">>>", line, doc[line][tokens]);
         if(primary == undefined){
             ++line;
             continue;
         }
-
-        for(var token = hasLabel ? 2 : 1; token < doc[line][tokens].length; ++token) {
-            if(
-                doc[line][tokens][token][0] == '{' &&
-                doc[line][tokens][token].slice(-1) == '}'
-              )
-                doc[line][tokens][token] = doc[line][tokens][token].slice(1,-1);
-		doc[line][tokens][token] = assembler.symbol.processToken(doc[line][tokens][token]);
+        if(assembler.stateObject.isEqu(primary) || (!hasLabel && assembler.stateObject.isEqu(doc[line][tokens][1])))
+            ;
+        else {
+            console.log("REPLACING", doc[line][tokens], "WRT", assembler.stateObject.symbolTable.decimal);
+            for(var token = hasLabel ? 2 : 1; token < doc[line][tokens].length; ++token) {
+                if(
+                    doc[line][tokens][token][0] == '{' &&
+                    doc[line][tokens][token].slice(-1) == '}'
+                  )
+                    doc[line][tokens][token] = doc[line][tokens][token].slice(1,-1);
+                doc[line][tokens][token] = assembler.symbol.processToken(doc[line][tokens][token]);
+            }
         }
 
         if (assembler.stateObject.isMacro(primary)) {
@@ -118,15 +125,15 @@ assembler.processExtensions = function() {
             }
 
             var resolved = assembler.conditional.processDTree(dtree, assembler.stateObject.symbolTable.decimal);
-        if(resolved == false) {
-                assembler.stateObject.addWarning('ASM_PE_EMPTYBODY', line);
-                ++line; continue;
-            }
-            var temp = doc.slice(0, line);
-            temp.push.apply(temp, resolved);
-            temp.push.apply(temp, doc.slice(end + 1));
-            assembler.stateObject.document = temp;
-            doc = assembler.stateObject.document;
+            if(resolved == false) {
+                    assembler.stateObject.addWarning('ASM_PE_EMPTYBODY', line);
+                    ++line; continue;
+                }
+                var temp = doc.slice(0, line);
+                temp.push.apply(temp, resolved);
+                temp.push.apply(temp, doc.slice(end + 1));
+                assembler.stateObject.document = temp;
+                doc = assembler.stateObject.document;
         } else if (assembler.stateObject.isDup(primary)) {
             var end = assembler.dup.getEndLine(line);
             var toReplace = assembler.dup.expand(line, assembler.stateObject.symbolTable.decimal);
@@ -141,14 +148,80 @@ assembler.processExtensions = function() {
             temp.push.apply(temp, doc.slice(end + 1));
             assembler.stateObject.document = temp;
             doc = assembler.stateObject.document;
-        } else if (assembler.stateObject.isEqu(primary)) {
+        } else if (assembler.stateObject.isEqu(primary) || !hasLabel && assembler.stateObject.isEqu(doc[line][tokens][1])) {
             assembler.symbol.registerSymbol(line, assembler.stateObject.symbolTable.decimal);
             var temp = doc.slice(0,line);
             temp.push.apply(temp, doc.slice(line+1));
             assembler.stateObject.document = temp;
             doc = assembler.stateObject.document;
+            console.log("EVALED", assembler.stateObject.symbolTable.decimal);
         } else 
             ++line;
+    }
+}
+
+assembler.getDefBuffers = () => {
+    var tokens = 1;
+    var doc = assembler.stateObject.document;
+    
+    for(var line in doc) {
+        var hasLabel = false;
+        
+        if(doc[line][tokens][0].slice(-1) == ':')
+            hasLabel = true;
+        
+        var keyword = doc[line][tokens][ hasLabel ? 1:0];
+        var args = doc[line][tokens].slice(hasLabel ? 2 : 1);
+
+        if(assembler.stateObject.isDef(keyword)){
+            if(args.length == 0)
+                assembler.stateObject.defbuffers[line] = ["00"];
+            else {
+               var value = assembler.parser.parseVal(args.join(" "), assembler.stateObject.symbolTable.decimal);
+                if(value == false){
+                    assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", line, {value: args.join(" ")});
+                    continue
+                }
+                if(value.len > 2) {
+                    assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", line, {value: value});
+                }
+                value = assembler.parser.pad(value, 2).slice(-2);
+                assembler.stateObject.defbuffers[line] = [value];
+            }
+        } else if (assembler.stateObject.isDdef(keyword)) {
+            if(args.length == 0)
+                assembler.stateObject.defbuffers[line] = ["00", "00"];
+            else {
+               var value = assembler.parser.parseVal(args.join(" "));
+                if(value == false){
+                    assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", line, {value: args.join(" ")});
+                    continue
+                }
+                if(value.len > 4) {
+                    assembler.stateObject.addWarning("ASM_DEF_TOOLONG16", line, {value: value});
+                }
+                value = assembler.parser.pad(value, 4).slice(-4);
+                assembler.stateObject.defbuffers[line] = [value.slice(-2), value.slice(0,-2)];
+            }
+        } else if (assembler.stateObject.isDefarr(keyword)) {
+            if(args.length == 0)
+                continue;
+            else {
+                assembler.stateObject.defbuffers[line] = [];
+                var length = args.length;
+                for(var arg in args){
+
+                    if(!assembler.parser.isHex(args[arg])){
+                        assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", line, {value: args[arg]});
+                        break;
+                    }
+                    var value = assembler.parser.parseVal(args[arg]);
+                    if(value.length > 2)
+                        assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", line, {value: args[arg]});
+                    assembler.stateObject.defbuffers[line].push(assembler.parser.pad(value, 2).slice(-2));
+                }
+            }
+        }
     }
 }
 
@@ -159,21 +232,22 @@ assembler.gatherReferences = () => {
     
     for(var line in doc) {
         var hasLabel = false;
-        var isEqu = false;
-        console.log(line);
+        var isOrg = false;
+        var isDef = false;
+
         if(doc[line][tokens][0].slice(-1) == ':')
             hasLabel = true;
         
         var keyword = doc[line][tokens][hasLabel ? 1 : 0];
         if(assembler.stateObject.isOrg(keyword)) {
-            isEqu = true;
+            isOrg = true;
             var next = assembler.parser.parseVal(
                 doc[line][tokens].slice(hasLabel ? 2 : 1).join(' '),
                 assembler.stateObject.symbolTable.decimal
             );
 
             if(next == false) {
-                assembler.stateObject.addError('ASM_ORG_INVALIDVALUE', line);
+                assembler.stateObject.addError('ASM_ORG_INVALIDVALUE', line, {value: doc[line][tokens].slice(hasLabel ? 2 : 1).join(" ")});
                 continue;
             }
             
@@ -181,22 +255,35 @@ assembler.gatherReferences = () => {
                 assembler.stateObject.addWarning('ASM_ORG_TOOLONG16', line, {value: next});
                 next = next.slice(-4);
             }
-            
+        
             currentPoint = next;
 
-        }
+        } else if (assembler.stateObject.isDef(keyword) || assembler.stateObject.isDdef(keyword) ||
+                   assembler.stateObject.isDefarr(keyword))
+            isDef = true;
         
         var size = assembler.sizeOf(keyword);
-        if(size == false && !isOrg) {
+        if(size == false && !isOrg && !isDef) {
             assembler.stateObject.addError('ASM_ORG_INVALIDKEYWORD', line, {value: keyword});
             continue;
         }
+
         console.log(keyword, hasLabel, doc[line], "at",line, size);
+
         if(hasLabel) {
             var label = doc[line][tokens][0].slice(0,-1);     
             assembler.stateObject.referenceTable[label] = line;
         }
-        if(isEqu) {
+        
+        if(isDef) {
+            var buffer = assembler.stateObject.defbuffers[line];
+            if(buffer == undefined)
+                continue;
+            assembler.stateObject.codePointTable[line] = currentPoint;
+            var size = buffer.length;
+            for(var _pt = 0; _pt < size; ++_pt)
+                currentPoint = assembler.parser.incrementHex(currentPoint);
+        } else if(isOrg) {
             continue;
         } else {
             assembler.stateObject.codePointTable[line] = currentPoint;

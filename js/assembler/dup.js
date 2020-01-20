@@ -53,10 +53,10 @@ assembler.dup.expand = (from, symtab) => {
     }
     
     var times = parseInt(times);
-    var toCopy = doc.slice(from+1, to);
+    var toCopy = JSON.stringify(doc.slice(from+1, to));
     
     for(var i = 0; i < times; ++i)
-        toReturn.push.apply(toReturn, toCopy);
+        toReturn.push.apply(toReturn, JSON.parse(toCopy));
 
     return toReturn;
 }
