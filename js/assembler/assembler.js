@@ -66,7 +66,7 @@ assembler.processExtensions = function() {
 
     while(line < doc.length) {
         var hasLabel = false;
-
+        var lineAt = doc[line][0];
         if(doc[line][tokens][0].slice(-1) == ':')
             hasLabel = true;
 
@@ -91,14 +91,14 @@ assembler.processExtensions = function() {
         }
 
         if (assembler.stateObject.isMacro(primary)) {
-                var expanded = assembler.macro.expandMacro(
+            var expanded = assembler.macro.expandMacro(
                 assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]],
                 hasLabel ? doc[line][tokens].slice(2) : doc[line][tokens].slice(1),
                 assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]].index++
             )
 
             if(expanded == false){
-                assembler.stateObject.addError('ASM_PE_CANTEXPANDMACRO', line);
+                assembler.stateObject.addError('ASM_PE_CANTEXPANDMACRO', lineAt);
                 ++line; continue;
             }
 
@@ -114,19 +114,19 @@ assembler.processExtensions = function() {
             var dtree = assembler.conditional.constructDTree(line);
 
             if(dtree == false) {
-                assembler.stateObject.addError('ASM_PE_CANTRESOLVECOND', line);
+                assembler.stateObject.addError('ASM_PE_CANTRESOLVECOND', lineAt);
                 ++line; continue;
             }
 
             var end = assembler.conditional.getIfEndLine(line);
             if(end == false) {
-                assembler.stateObject.addError('ASM_PE_CANTRESOLVECOND', line);
+                assembler.stateObject.addError('ASM_PE_CANTRESOLVECOND', lineAt);
                 ++line; continue;
             }
 
             var resolved = assembler.conditional.processDTree(dtree, assembler.stateObject.symbolTable.decimal);
             if(resolved == false) {
-                    assembler.stateObject.addWarning('ASM_PE_EMPTYBODY', line);
+                    assembler.stateObject.addWarning('ASM_PE_EMPTYBODY', lineAt);
                     ++line; continue;
                 }
                 var temp = doc.slice(0, line);
@@ -139,7 +139,7 @@ assembler.processExtensions = function() {
             var toReplace = assembler.dup.expand(line, assembler.stateObject.symbolTable.decimal);
             
             if(end == false || toReplace == false)  {
-                assembler.stateObject.addWarning('ASM_PE_CANTEXPANDDUP', line);
+                assembler.stateObject.addWarning('ASM_PE_CANTEXPANDDUP', lineAt);
                 ++line; continue;
             }
 
@@ -180,11 +180,11 @@ assembler.getDefBuffers = function () {
             else {
                var value = assembler.parser.parseVal(args.join(" "), assembler.stateObject.symbolTable.decimal);
                 if(value == false){
-                    assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", line, {value: args.join(" ")});
+                    assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", lineInCode, {value: args.join(" ")});
                     continue
                 }
                 if(value.len > 2) {
-                    assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", line, {value: value});
+                    assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", lineInCode, {value: value});
                 }
                 value = assembler.parser.pad(value, 2).slice(-2);
                 assembler.stateObject.defbuffers[lineInCode] = [value];
@@ -195,11 +195,11 @@ assembler.getDefBuffers = function () {
             else {
                var value = assembler.parser.parseVal(args.join(" "));
                 if(value == false){
-                    assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", line, {value: args.join(" ")});
-                    continue
+                    assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", lineInCode, {value: args.join(" ")});
+                    continue;
                 }
                 if(value.len > 4) {
-                    assembler.stateObject.addWarning("ASM_DEF_TOOLONG16", line, {value: value});
+                    assembler.stateObject.addWarning("ASM_DEF_TOOLONG16", lineInCode, {value: value});
                 }
                 value = assembler.parser.pad(value, 4).slice(-4);
                 assembler.stateObject.defbuffers[lineInCode] = [value.slice(-2), value.slice(0,-2)];
@@ -213,12 +213,12 @@ assembler.getDefBuffers = function () {
                 for(var arg in args){
 
                     if(!assembler.parser.isHex(args[arg])){
-                        assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", line, {value: args[arg]});
+                        assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", lineInCode, {value: args[arg]});
                         break;
                     }
                     var value = assembler.parser.parseVal(args[arg]);
                     if(value.length > 2)
-                        assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", line, {value: args[arg]});
+                        assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", lineInCode, {value: args[arg]});
                     assembler.stateObject.defbuffers[lineInCode].push(assembler.parser.pad(value, 2).slice(-2));
                 }
             }
@@ -249,12 +249,12 @@ assembler.gatherReferences = function () {
             );
 
             if(next == false) {
-                assembler.stateObject.addError('ASM_ORG_INVALIDVALUE', line, {value: doc[line][tokens].slice(hasLabel ? 2 : 1).join(" ")});
+                assembler.stateObject.addError('ASM_ORG_INVALIDVALUE', lineInCode, {value: doc[line][tokens].slice(hasLabel ? 2 : 1).join(" ")});
                 continue;
             }
             
             if(next.length > 4) {
-                assembler.stateObject.addWarning('ASM_ORG_TOOLONG16', line, {value: next});
+                assembler.stateObject.addWarning('ASM_ORG_TOOLONG16', lineInCode, {value: next});
                 next = next.slice(-4);
             }
         
@@ -266,12 +266,9 @@ assembler.gatherReferences = function () {
         
         var size = assembler.sizeOf(keyword);
         if(size == false && !isOrg && !isDef) {
-            assembler.stateObject.addError('ASM_ORG_INVALIDKEYWORD', line, {value: keyword});
+            assembler.stateObject.addError('ASM_ORG_INVALIDKEYWORD', lineInCode, {value: keyword});
             continue;
         }
-
-        console.log(keyword, hasLabel, doc[line], "at",line, size);
-        console.log(keyword, "AT LINE", lineInCode, "HAS FLAGS", isDef, isOrg);
 
         if(hasLabel) {
             var label = doc[line][tokens][0].slice(0,-1);     
@@ -301,9 +298,9 @@ assembler.assembleCode = function (){
 	var doc = assembler.stateObject.document;
 	var tokens = 1;
 	for(var line in doc) {
-        var current = assembler.stateObject.codePointTable[doc[line][0]];
+        var lineAtCode = doc[line][0];
+        var current = assembler.stateObject.codePointTable[lineAtCode];
         console.log(">>>>>>>>>>>>>>>>>>>>>>>>", current);
-		assembler.stateObject.codePointTable[line] = current;
 
 		var hasLabel = false;
 
@@ -321,13 +318,13 @@ assembler.assembleCode = function (){
             continue;
 
 		if(fmt == undefined) {
-			assembler.stateObject.addError('ASM_ASM_INVALIDKEYWORD', line, {key: keyword});
+			assembler.stateObject.addError('ASM_ASM_INVALIDKEYWORD', lineAtCode, {key: keyword});
 			continue;
 		}
 
 		var args = doc[line][tokens].slice(hasLabel ? 2 : 1);
 		if(args.length != fmt.length) {
-			assembler.stateObject.addError('ASM_ASM_WRONGNOOFARGS', line, {needs: fmt.length, has: args.length});
+			assembler.stateObject.addError('ASM_ASM_WRONGNOOFARGS', lineAtCode, {needs: fmt.length, has: args.length});
 			continue;
 		}
 		console.log("original", args);
@@ -347,14 +344,14 @@ assembler.assembleCode = function (){
         for(var i in args) {
             if(fmt[i] == '8-bit' && assembler.parser.isHex(args[i])){
                 if(args[i].length > 2) {
-                    assembler.stateObject.addWarning('ASM_ASM_TOOLONG8', line, {value: args[i]});
+                    assembler.stateObject.addWarning('ASM_ASM_TOOLONG8', lineAtCode, {value: args[i]});
                     args[i] = args[i].slice(-2);
                 } else {
                     args[i] = assembler.parser.pad(args[i], 2);
                 }
             } else if(fmt[i] == '16-bit' && assembler.parser.isHex(args[i])) {
                 if(args[i].length > 4) {
-                    assembler.stateObject.addWarning('ASM_ASM_TOOLONG16', line, {value: args[i]});
+                    assembler.stateObject.addWarning('ASM_ASM_TOOLONG16', lineAtCode, {value: args[i]});
                     args[i] = args[i].slice(-4);
                 } else {
                     args[i] = assembler.parser.pad(args[i], 4);
@@ -376,7 +373,7 @@ assembler.assembleCode = function (){
             else
                 code = assembler.codeOf[keyword][accessors[0]][accessors[1]].code;
         } catch(err) {
-            assembler.stateObject.addError('ASM_ASM_MALFORMEDINSTR', line);
+            assembler.stateObject.addError('ASM_ASM_MALFORMEDINSTR', lineAtCode);
             continue;
         }
         var size = assembler.sizeOf(keyword);
@@ -385,12 +382,12 @@ assembler.assembleCode = function (){
             if(assembler.parser.type(args[arg]) == 'label') {
                 var lineAt = assembler.stateObject.referenceTable[args[arg]];
                 if(lineAt == undefined) {
-                    assembler.stateObject.addError('ASM_ASM_NOLABELMATCH', line, {value: args[arg]});
+                    assembler.stateObject.addError('ASM_ASM_NOLABELMATCH', lineAtCode, {value: args[arg]});
                     continue;
                 }
                 var replaceWith = assembler.stateObject.codePointTable[lineAt];
                 if(replaceWith == undefined) {
-                    assembler.stateObject.addError('ASM_ASM_NOLABELADDR', line, {value: args[arg], references: lineAt});
+                    assembler.stateObject.addError('ASM_ASM_NOLABELADDR', lineAtCode, {value: args[arg], references: lineAt});
                     continue;
                 }
                 args[arg] = replaceWith;
@@ -399,7 +396,7 @@ assembler.assembleCode = function (){
                 //The main thing with this is that the compiler may issue an error, imperial to check in this case
                 //the error used is ASM_TRAP_COMPILERERROR at which point compilation stops completely
                 if(args[arg].length > 4) {
-                    assembler.stateObject.addError('ASM_TRAP_COMPILERERROR', line, {stack: '@replacedlencheck@label-replace@assembler'});
+                    assembler.stateObject.addError('ASM_TRAP_COMPILERERROR', lineAtCode, {stack: '@replacedlencheck@label-replace@assembler'});
                     return false;
                 }
             }
@@ -421,4 +418,19 @@ assembler.assembleCode = function (){
             }
         }
 	}
+}
+
+assembler.addDefBuffers = function() {
+    for(var buffer in assembler.stateObject.defbuffers) {
+        //buffer = {sourceLine: ['HH', 'HH', 'HH', ...]}
+        //starting address from each buffer = assembler.stateObject.codePointTable[sourceLine]
+        //then keep incrementHex-ing it till len(buffer[sourceLine])
+        var currentBuffer = assembler.stateObject.defbuffers[buffer];
+        var sourceLine = buffer;
+        var address = assembler.stateObject.codePointTable[sourceLine];
+        for(var word in currentBuffer) {
+            assembler.stateObject.listing[address] = currentBuffer[word];
+            address = assembler.parser.incrementHex(address, 4);
+        }
+    }
 }
