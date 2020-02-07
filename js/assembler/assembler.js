@@ -13,6 +13,7 @@ assembler.stateObject = {
     referenceTable: {},
     codePointTable: {},
 	listing: {},
+    cwlisting: [],
     errors: [],
     defbuffers: {},             //line -> buffer
     warnings: []
@@ -46,11 +47,14 @@ assembler.tokenize = function() {
 /*Preprocessing Pass*/
 assembler.preprocess = function() {
     assembler.comment.removeCommentsFromRaw();
+    console.log("TOKENIZING ", assembler.stateObject.rawDocument);
     assembler.tokenize();
+    console.log("TOKENIZED TO ", assembler.stateObject.document);
 }
 
 /*Pass 1: Get and Delete from raw Macro definitions*/
 assembler.getMacrosAndClean = function() {
+    console.log("PROCESSING FOR MACROS DOCUMENT", assembler.stateObject.document);
     if(assembler.macro.populateMacroTables()){
         assembler.macro.removeMacrosFromDoc();
         return true;
@@ -64,7 +68,9 @@ assembler.processExtensions = function() {
     var line = 0;
     var tokens = 1;
 
+    console.log("AT START THE UNIVERSAL MACRO TABLE IS ", assembler.stateObject.macroTable);
     while(line < doc.length) {
+        console.log("NOPENOPE MACRO TABLE IS", line, assembler.stateObject.macroTable);
         var hasLabel = false;
         var lineAt = doc[line][0];
         if(doc[line][tokens][0].slice(-1) == ':')
@@ -76,7 +82,8 @@ assembler.processExtensions = function() {
             ++line;
             continue;
         }
-        if(assembler.stateObject.isEqu(primary) || (!hasLabel && assembler.stateObject.isEqu(doc[line][tokens][1])))
+        if(assembler.stateObject.isEqu(primary) || (!hasLabel && assembler.stateObject.isEqu(doc[line][tokens][1])) || 
+           assembler.stateObject.isDef(primary) || assembler.stateObject.isDdef(primary) || assembler.stateObject.isDefarr(primary))
             ;
         else {
             console.log("REPLACING", doc[line][tokens], "WRT", assembler.stateObject.symbolTable.decimal);
@@ -87,15 +94,20 @@ assembler.processExtensions = function() {
                   )
                     doc[line][tokens][token] = doc[line][tokens][token].slice(1,-1);
                 doc[line][tokens][token] = assembler.symbol.processToken(doc[line][tokens][token]);
+                console.log("REPL", doc[line][tokens][token]);
             }
         }
 
         if (assembler.stateObject.isMacro(primary)) {
+            var macroBody = assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]];
+            //TODO this is akin to hitting the object with a hammer and then 
+            //tryna superglue it back together. Oh Well. Fix this.
+            var macroBodyCopy = JSON.parse(JSON.stringify(macroBody));
             var expanded = assembler.macro.expandMacro(
-                assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]],
+                macroBodyCopy,
                 hasLabel ? doc[line][tokens].slice(2) : doc[line][tokens].slice(1),
                 assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]].index++
-            )
+            );
 
             if(expanded == false){
                 assembler.stateObject.addError('ASM_PE_CANTEXPANDMACRO', lineAt);
@@ -110,9 +122,11 @@ assembler.processExtensions = function() {
             temp.push.apply(temp, doc.slice(line+1));
             assembler.stateObject.document = temp;
             doc = assembler.stateObject.document;
+            console.log("AFTER CLEANING", doc);
         } else if (assembler.stateObject.isCond(primary)) {
             var dtree = assembler.conditional.constructDTree(line);
 
+            console.log(">>>>>>>INIF", doc[line]);
             if(dtree == false) {
                 assembler.stateObject.addError('ASM_PE_CANTRESOLVECOND', lineAt);
                 ++line; continue;
@@ -126,14 +140,19 @@ assembler.processExtensions = function() {
 
             var resolved = assembler.conditional.processDTree(dtree, assembler.stateObject.symbolTable.decimal);
             if(resolved == false) {
-                    assembler.stateObject.addWarning('ASM_PE_EMPTYBODY', lineAt);
-                    ++line; continue;
-                }
+                assembler.stateObject.addWarning('ASM_PE_EMPTYBODY', lineAt);
+                var temp = doc.slice(0, line);
+                temp.push.apply(temp, doc.slice(end + 1));
+                assembler.stateObject.document = temp;
+                doc = assembler.stateObject.document;
+            } else {
                 var temp = doc.slice(0, line);
                 temp.push.apply(temp, resolved);
                 temp.push.apply(temp, doc.slice(end + 1));
                 assembler.stateObject.document = temp;
                 doc = assembler.stateObject.document;
+                console.log("RESOLVED", resolved, "DOC", doc);
+            }
         } else if (assembler.stateObject.isDup(primary)) {
             var end = assembler.dup.getEndLine(line);
             var toReplace = assembler.dup.expand(line, assembler.stateObject.symbolTable.decimal);
@@ -300,7 +319,6 @@ assembler.assembleCode = function (){
 	for(var line in doc) {
         var lineAtCode = doc[line][0];
         var current = assembler.stateObject.codePointTable[lineAtCode];
-        console.log(">>>>>>>>>>>>>>>>>>>>>>>>", current);
 
 		var hasLabel = false;
 
@@ -332,13 +350,17 @@ assembler.assembleCode = function (){
 		var accessors = [];
 
         //Type upgrading 
-        for(var i in args)
-            if(fmt[i] == '8-bit' || fmt[i] == '16-bit') {
-                var res = assembler.parser.parseVal(args[i], assembler.stateObject.symbolTable.decimal);
-                console.log("RESULT", res, "of", args[i]);
-                args[i] = res == false ? args[i] : res;
-                console.log(args);
-            }
+        //If RST1 then argument _is_ as it should be
+        if(keyword == 'RST') {
+            ;//Skip
+        } else    
+            for(var i in args)
+                if(fmt[i] == '8-bit' || fmt[i] == '16-bit') {
+                    var res = assembler.parser.parseVal(args[i], assembler.stateObject.symbolTable.decimal);
+                    console.log("RESULT", res, "of", args[i]);
+                    args[i] = res == false ? args[i] : res;
+                    console.log(args);
+                }
 
         //Padding and width checking
         for(var i in args) {
@@ -359,11 +381,15 @@ assembler.assembleCode = function (){
             }
         }
 
-		for(var arg in args) {
-			accessors.push(assembler.parser.getAccessor(args[arg]));
-        }
+        //Get accessors
+        //If RST # then # _is_ accessor
+        if(keyword == 'RST') 
+            for(var arg in args)
+                accessors.push(args[arg]);
+        else
+            for(var arg in args)
+                accessors.push(assembler.parser.getAccessor(args[arg]));
 
-		console.log(">>::", accessors);
         var code;
         try {
             if(accessors.length === 0)
@@ -377,46 +403,63 @@ assembler.assembleCode = function (){
             continue;
         }
         var size = assembler.sizeOf(keyword);
-
-        for(var arg in args){
-            if(assembler.parser.type(args[arg]) == 'label') {
-                var lineAt = assembler.stateObject.referenceTable[args[arg]];
-                if(lineAt == undefined) {
-                    assembler.stateObject.addError('ASM_ASM_NOLABELMATCH', lineAtCode, {value: args[arg]});
-                    continue;
-                }
-                var replaceWith = assembler.stateObject.codePointTable[lineAt];
-                if(replaceWith == undefined) {
-                    assembler.stateObject.addError('ASM_ASM_NOLABELADDR', lineAtCode, {value: args[arg], references: lineAt});
-                    continue;
-                }
-                args[arg] = replaceWith;
-                //At this point we need to recheck the width of the replaced address
-                //It is garunteed to be in hex 4-hexdigits long but never hurts to check
-                //The main thing with this is that the compiler may issue an error, imperial to check in this case
-                //the error used is ASM_TRAP_COMPILERERROR at which point compilation stops completely
-                if(args[arg].length > 4) {
-                    assembler.stateObject.addError('ASM_TRAP_COMPILERERROR', lineAtCode, {stack: '@replacedlencheck@label-replace@assembler'});
-                    return false;
+        
+        if(keyword == 'RST')
+            ; //Skip parsing as RST's arguments are accessors NOT arguments
+        else
+            for(var arg in args){
+                if(assembler.parser.type(args[arg]) == 'label') {
+                    var lineAt = assembler.stateObject.referenceTable[args[arg]];
+                    if(lineAt == undefined) {
+                        assembler.stateObject.addError('ASM_ASM_NOLABELMATCH', lineAtCode, {value: args[arg]});
+                        continue;
+                    }
+                    var replaceWith = assembler.stateObject.codePointTable[lineAt];
+                    if(replaceWith == undefined) {
+                        assembler.stateObject.addError('ASM_ASM_NOLABELADDR', lineAtCode, {value: args[arg], references: lineAt});
+                        continue;
+                    }
+                    args[arg] = replaceWith;
+                    //At this point we need to recheck the width of the replaced address
+                    //It is garunteed to be in hex 4-hexdigits long but never hurts to check
+                    //The main thing with this is that the compiler may issue an error, imperial to check in this case
+                    //the error used is ASM_TRAP_COMPILERERROR at which point compilation stops completely
+                    if(args[arg].length > 4) {
+                        assembler.stateObject.addError('ASM_TRAP_COMPILERERROR', lineAtCode, {stack: '@replacedlencheck@label-replace@assembler'});
+                        return false;
+                    }
                 }
             }
-        }
-
+            
+        if(keyword == 'RST')
+            ;
+        else
+        var cwl = {};
         //Arglist is complete at this time, begin creation of code
         assembler.stateObject.listing[current] = code;
+        cwl["line"] = doc[line][tokens].join(" ");
+        cwl["codes"] = {};
+        cwl["codes"][current] = code;
         current = assembler.parser.incrementHex(current, 4);
-        for(var type in fmt) {
-            if(fmt[type] == '8-bit') {
-                assembler.stateObject.listing[current] = args[type];
-                current = assembler.parser.incrementHex(current, 4);
-            } else if(fmt[type] == '16-bit') {
-                assembler.stateObject.listing[current] = args[type].slice(-2);
-                current = assembler.parser.incrementHex(current, 4);
+        if(keyword == 'RST')
+            ; //Skip, args are not ARGS
+        else
+            for(var type in fmt) {
+                if(fmt[type] == '8-bit') {
+                    assembler.stateObject.listing[current] = args[type];
+                    cwl.codes[current] = args[type];
+                    current = assembler.parser.incrementHex(current, 4);
+                } else if(fmt[type] == '16-bit') {
+                    assembler.stateObject.listing[current] = args[type].slice(-2);
+                    cwl.codes[current] = args[type].slice(-2);
+                    current = assembler.parser.incrementHex(current, 4);
 
-                assembler.stateObject.listing[current] = args[type].slice(0,-2);
-                current = assembler.parser.incrementHex(current, 4);
+                    assembler.stateObject.listing[current] = args[type].slice(0,-2);
+                    cwl.codes[current] = args[type].slice(0,-2);
+                    current = assembler.parser.incrementHex(current, 4);
+                }
             }
-        }
+        assembler.stateObject.cwlisting.push(cwl);
 	}
 }
 
@@ -433,4 +476,17 @@ assembler.addDefBuffers = function() {
             address = assembler.parser.incrementHex(address, 4);
         }
     }
+}
+
+assembler.DEBUGCOMPILE = function(str) {
+    assembler.stateObject.rawDocument = str;
+    assembler.preprocess();
+    assembler.getMacrosAndClean();
+    assembler.processExtensions();
+    assembler.getDefBuffers();
+    assembler.gatherReferences();
+    console.log("COMPILING", assembler.stateObject.document);
+    assembler.assembleCode();
+    assembler.addDefBuffers();
+    console.log(assembler.stateObject);
 }

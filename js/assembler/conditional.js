@@ -110,10 +110,12 @@ assembler.conditional.processDTree = function(dtree, symtab) {
     if(dtree == false)
         return false;
 
+    console.log(dtree);
     for(var node in dtree) {
         var condition = dtree[node].condition.join(' ');
 
         var evaluated = assembler.parser.parseExpr(condition, symtab);
+        console.log(condition, "EVALUATES TO", evaluated);
 
         if(evaluated == false)
             return false;

@@ -17,6 +17,7 @@ assembler.symbol.registerSymbol = function (at, symtab) {
     var value = assembler.parser.parseVal(arg, assembler.stateObject.symbolTable.decimal);
     console.log("Evaluated to ", value);
     if(value === false) {
+        console.log(arg[0] == '"' && arg.slice(-1) == '"', at);
         if(arg[0] == '"' && arg.slice(-1) == '"' || arg[0] == "'" && arg.slice(-1) == "'"){
             arg = arg.slice(1,-1);
             assembler.stateObject.symbolTable.decimal[label] = [];
@@ -84,7 +85,7 @@ assembler.symbol.processToken = (token) => {
     try {
         var val = assembler.parser.parseVal(t, assembler.stateObject.symbolTable.decimal);
         console.log(val);
-        return val ? val : token;
+        return val ? val + 'H' : token;
     } catch(err) {
         console.log("COULDNT EVALUATE");
         return token;

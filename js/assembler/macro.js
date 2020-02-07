@@ -59,6 +59,7 @@ assembler.macro.getMacroFromLine = function(at) {
 			continue;
 		}
 		body.push(doc[i]); 		//Append line to body.
+        console.log("APPENDED ", doc[i], "TO MACRO");
 		++i;
 	}
 
@@ -77,6 +78,7 @@ assembler.macro.getMacroFromLine = function(at) {
 		locals: localsDirectory,
 		index: 0
 	};
+    console.log("IT IS", macroObject);
 
 	assembler.stateObject.macroTable.push(macroObject);
 	assembler.stateObject.macroLookupTable[definition[tokens][0].slice(0, -1)] = assembler.stateObject.macroTable.length - 1;
@@ -122,6 +124,7 @@ assembler.macro.populateMacroTables = function() {
 	for(var line in doc)
 		if(doc[line][tokens].includes('MACRO') || doc[line][tokens].includes('macro')){
 			var current = assembler.macro.getMacroFromLine(line);
+            console.log("GATHERED", current);
 			ok = ok ? current: false;
 		}
 

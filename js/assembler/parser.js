@@ -111,6 +111,7 @@ assembler.parser.decFromHex = function(value) {
 */
 assembler.parser.parseVal = function(value, decSymbolTable) {
     if(value == undefined) return false;
+    if(assembler.parser.type(value) == 'name') return false;
 	var isHex = false;
 	if (value.slice(-1) == 'H' || value.slice(-1) == 'h') {
 		isHex = true;
