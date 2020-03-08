@@ -195,7 +195,7 @@ assembler.getDefBuffers = function () {
 
         if(assembler.stateObject.isDef(keyword)){
             if(args.length == 0)
-                assembler.stateObject.defbuffers[lineInCode] = ["00"];
+                assembler.stateObject.defbuffers[line] = ["00"];
             else {
                var value = assembler.parser.parseVal(args.join(" "), assembler.stateObject.symbolTable.decimal);
                 if(value == false){
@@ -206,11 +206,11 @@ assembler.getDefBuffers = function () {
                     assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", lineInCode, {value: value});
                 }
                 value = assembler.parser.pad(value, 2).slice(-2);
-                assembler.stateObject.defbuffers[lineInCode] = [value];
+                assembler.stateObject.defbuffers[line] = [value];
             }
         } else if (assembler.stateObject.isDdef(keyword)) {
             if(args.length == 0)
-                assembler.stateObject.defbuffers[lineInCode] = ["00", "00"];
+                assembler.stateObject.defbuffers[line] = ["00", "00"];
             else {
                var value = assembler.parser.parseVal(args.join(" "));
                 if(value == false){
@@ -221,13 +221,13 @@ assembler.getDefBuffers = function () {
                     assembler.stateObject.addWarning("ASM_DEF_TOOLONG16", lineInCode, {value: value});
                 }
                 value = assembler.parser.pad(value, 4).slice(-4);
-                assembler.stateObject.defbuffers[lineInCode] = [value.slice(-2), value.slice(0,-2)];
+                assembler.stateObject.defbuffers[line] = [value.slice(-2), value.slice(0,-2)];
             }
         } else if (assembler.stateObject.isDefarr(keyword)) {
             if(args.length == 0)
                 continue;
             else {
-                assembler.stateObject.defbuffers[lineInCode] = [];
+                assembler.stateObject.defbuffers[line] = [];
                 var length = args.length;
                 for(var arg in args){
 
@@ -238,7 +238,7 @@ assembler.getDefBuffers = function () {
                     var value = assembler.parser.parseVal(args[arg]);
                     if(value.length > 2)
                         assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", lineInCode, {value: args[arg]});
-                    assembler.stateObject.defbuffers[lineInCode].push(assembler.parser.pad(value, 2).slice(-2));
+                    assembler.stateObject.defbuffers[line].push(assembler.parser.pad(value, 2).slice(-2));
                 }
             }
         }
@@ -291,21 +291,21 @@ assembler.gatherReferences = function () {
 
         if(hasLabel) {
             var label = doc[line][tokens][0].slice(0,-1);     
-            assembler.stateObject.referenceTable[label] = lineInCode;
+            assembler.stateObject.referenceTable[label] = line;
         }
         
         if(isDef) {
-            var buffer = assembler.stateObject.defbuffers[lineInCode];
+            var buffer = assembler.stateObject.defbuffers[line];
             if(buffer == undefined)
                 continue;
-            assembler.stateObject.codePointTable[lineInCode] = currentPoint;
+            assembler.stateObject.codePointTable[line] = currentPoint;
             var size = buffer.length;
             for(var _pt = 0; _pt < size; ++_pt)
                 currentPoint = assembler.parser.incrementHex(currentPoint);
         } else if(isOrg) {
             continue;
         } else {
-            assembler.stateObject.codePointTable[lineInCode] = currentPoint;
+            assembler.stateObject.codePointTable[line] = currentPoint;
             for(var _pt = 0; _pt < size; ++_pt)
                 currentPoint = assembler.parser.incrementHex(currentPoint);
         }
@@ -318,7 +318,7 @@ assembler.assembleCode = function (){
 	var tokens = 1;
 	for(var line in doc) {
         var lineAtCode = doc[line][0];
-        var current = assembler.stateObject.codePointTable[lineAtCode];
+        var current = assembler.stateObject.codePointTable[line];
 
 		var hasLabel = false;
 

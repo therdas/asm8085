@@ -229,5 +229,6 @@ assembler.macro.expandMacro = function(macro, arglist, index) {
 	var body = macro.body;
 	var afterMangling = assembler.macro.mangleLocals(body, macro.locals, index);
 	var afterExpansion = assembler.macro.expandArgs(afterMangling, macro.args, arglist);
+    console.log("MACRORETURNSTHISAFTEREXPANSION:", afterExpansion);
 	return afterExpansion;
 }
