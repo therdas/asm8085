@@ -46,7 +46,7 @@ assembler.dup.expand = (from, symtab) => {
     else 
         condition = doc[from][tokens].slice(1).join(' ');
     
-    times = assembler.parser.parseVal(condition, symtab);
+    times = assembler.parser.parseVal(condition, symtab, true).toString();
     if(times == false || assembler.parser.isDec(times) == false){
         assembler.stateObject.addError('AMDUP_IMPROPERVAL', from);
         return false;

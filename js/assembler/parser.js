@@ -43,9 +43,6 @@ assembler.parser.isDec = function (token) {
 assembler.parser.type = function(token) {
     token = token + '';
 
-	if(token.slice(-1) == 'H' && token.length > 1)
-		token = token.slice(0,-1);
-
 	if(['A', 'B', 'C', 'D', 'E', 'H', 'L', 'SP', 'PC', 'M'].includes(token))
 		return('name');
 	else if(token.length == 4 && assembler.parser.isHex(token, 16))
@@ -109,12 +106,14 @@ assembler.parser.decFromHex = function(value) {
 		If value is none of the above, return false.
 	Always returns either a hex value or false.
 */
-assembler.parser.parseVal = function(value, decSymbolTable) {
+assembler.parser.parseVal = function(value, decSymbolTable, returnDecimal) {
     if(value == undefined) return false;
+    if(returnDecimal == undefined) returnDecimal = false;
     if(assembler.parser.type(value) == 'name') return false;
 	var isHex = false;
 	if (value.slice(-1) == 'H' || value.slice(-1) == 'h') {
 		isHex = true;
+        console.log('HHHHHH');
 		value = value.slice(0,-1);
 	}
 
@@ -124,13 +123,15 @@ assembler.parser.parseVal = function(value, decSymbolTable) {
 		else if(assembler.parser.isHex(value))
 			return value;
 		else {
-			var res = assembler.parser.parseExpr(value, decSymbolTable).toString(16).toUpperCase();
+			var res = assembler.parser.parseExpr(value, decSymbolTable);
+            if(!returnDecimal)
+                res = res.toString(16).toUpperCase();
             return res == 'FALSE' ? false : res;
         }
 	} else {
-		if(assembler.parser.isHexWithoutSuffix(value))
-			return value;
-		else
+		if(assembler.parser.isHexWithoutSuffix(value)){
+			return returnDecimal ? assembler.parser.decFromHex(value).toString() : value;
+        }else
 			return false;
 	}
 }

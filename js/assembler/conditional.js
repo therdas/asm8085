@@ -113,14 +113,17 @@ assembler.conditional.processDTree = function(dtree, symtab) {
     console.log(dtree);
     for(var node in dtree) {
         var condition = dtree[node].condition;
-        for(var token in condition) {
-            var temp = assembler.parser.parseVal(condition[token], symtab);
+        for(var token = 0; token < condition.length; ++token) {
+            console.log(">>>>>>>>", condition[token]);
+            var temp = assembler.parser.parseVal(condition[token], symtab, true).toString();
             console.log("::::::::", temp)
-            if(temp === false)
+            if(temp === "false")
                 continue;
-            condition[token] = parseInt(temp, 16);
+            else
+                condition[token] = temp;
         }
         var finalCondition = condition.join(" ");
+        console.log("CORRECTED CONDITION ", condition);
         var evaluated = assembler.parser.parseExpr(finalCondition, symtab);
         console.log(finalCondition, "EVALUATES TO", evaluated);
 

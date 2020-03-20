@@ -200,6 +200,11 @@ assembler.macro.expandArgs = function(body, arglist, values) {
 		assembler.stateObject.addError('AMMACRO_ARGMISMATCH', body[0][0]);
 		return false;
 	}
+    for(var i = 0; i < values.length; ++i)
+        console.log("<><><><>", assembler.parser.decFromHex(values[i]));
+
+    for(var i = 0; i < values.length; ++i)
+        values[i] = assembler.parser.decFromHex(values[i]).toString();
 
 	var modlines = [];
 	var tokens = 1;
