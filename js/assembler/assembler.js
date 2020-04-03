@@ -68,9 +68,7 @@ assembler.processExtensions = function() {
     var line = 0;
     var tokens = 1;
 
-    console.log("AT START THE UNIVERSAL MACRO TABLE IS ", assembler.stateObject.macroTable);
     while(line < doc.length) {
-        console.log("NOPENOPE MACRO TABLE IS", line, assembler.stateObject.macroTable);
         var hasLabel = false;
         var lineAt = doc[line][0];
         if(doc[line][tokens][0].slice(-1) == ':')
