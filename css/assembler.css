@@ -702,14 +702,6 @@ body.minned {
 	margin: 0;
 }
 
-#sidebar > table > tbody > tr > td:nth-child(even) {
-	background-color: rgba(0,0,0,0.1);
-}
-
-#sidebar > table > tbody > tr > td:nth-child(3) {
-	border-left: 2px solid rgba(255,255,255,0.04);
-}
-
 table {
 	border-spacing: 0;
 	//display: inline-block;
@@ -725,10 +717,6 @@ th, td {
 
 th.disabled, td.disabled {
 	opacity: 0.5;
-}
-
-td:nth-child(even) {
-	background-color: rgba(0,0,0,0.1);
 }
 
 .debug-tab--views > div.half {

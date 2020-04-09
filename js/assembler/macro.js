@@ -22,14 +22,17 @@ assembler.macro.getMacroEndLine = function(at, lines) {
 
 	var i = at + 1;
 	var sp = 1;
+	var step = 0;
 
 	while(i < doc.length && sp != 0) {
-		if(doc[i][tokens].includes('MACRO') || doc[i][tokens].includes('macro'))
+		if(doc[i - 1][tokens].includes('MACRO') || doc[i - 1][tokens].includes('macro'))
 			++sp;
-		if(doc[i][tokens].includes('ENDM') || doc[i][tokens].includes('endm'))
+		else if(doc[i - 1][tokens].includes('ENDM') || doc[i - 1][tokens].includes('endm'))
 			--sp;
+		
 		if(sp == 0)
-			return i;
+			return i- 1;
+		
 		++i;
 	}
 
@@ -159,8 +162,9 @@ assembler.macro.removeMacrosFromDoc = function() {
 		if(
 			assembler.stateObject.document[i][tokens].includes('macro') ||
 			assembler.stateObject.document[i][tokens].includes('MACRO')
-		  )
-			assembler.macro.removeSingleMacro(i);
+		  ){
+			i = assembler.macro.removeSingleMacro(i) ? i : i + 1;
+		}
 		else
 			++i;
 	}
@@ -174,6 +178,11 @@ assembler.macro.mangleLocals = function(body, locals, index) {
 	var modlines = [];
 	var tokens = 1;
 
+	/*Create substitution symbol table*/
+	var SUBSYMTAB = {};
+	for(var x in locals)
+		SUBSYMTAB[locals[x]] = assembler.macro.mangleLocal(locals[x], index);
+
 	for(var i in body) {
 		var line = body[i].slice();
 		//First check if the line is labelled,
@@ -186,10 +195,16 @@ assembler.macro.mangleLocals = function(body, locals, index) {
 		}
 
 		for(var token in line[tokens]) {
+			var temp = assembler.parser.simplify(line[tokens][token], {}, SUBSYMTAB);
+			if(temp !== false)
+				line[tokens][token] = temp;
+		}
+
+		/*for(var token in line[tokens]) {
 			if(locals.includes(line[tokens][token])) {
 				line[tokens][token] = assembler.macro.mangleLocal(line[tokens][token], index);
 			}
-		}
+		}*/
 		modlines.push(line);
 	}
 	return modlines;
@@ -197,30 +212,38 @@ assembler.macro.mangleLocals = function(body, locals, index) {
 
 assembler.macro.expandArgs = function(body, arglist, values) {
 	if(arglist.length != values.length){
-		assembler.stateObject.addError('AMMACRO_ARGMISMATCH', body[0][0]);
+		assembler.stateObject.addError('AMMACRO_ARGMISMATCH', body[0][0], {needs: arglist.length, has: values.length});
 		return false;
 	}
-    for(var i = 0; i < values.length; ++i)
-        console.log("<><><><>", assembler.parser.decFromHex(values[i]));
 
-    for(var i = 0; i < values.length; ++i)
-        values[i] = assembler.parser.decFromHex(values[i]).toString();
+	/*Process arguments*/
+	var SYMTAB = {};
+	var SSYMTAB = {};
+	for(var i = 0; i < arglist.length; ++i){
+		var val = parseInt(values[i], 16);
+		if(temp !== NaN)
+			SYMTAB[arglist[i]] = val;
+		else
+			SSYMTAB[arglist[i]] = values[i];
+	}
 
-	var modlines = [];
+   	var modlines = [];
 	var tokens = 1;
 	for(var lines in body) {
 		var line = body[lines].slice();
+
+		for(var token in line[tokens]) {
+			var temp = assembler.parser.simplify(line[tokens][token], SYMTAB, SSYMTAB);
+			if (temp === false)
+				;
+			else
+				line[tokens][token] = temp.toString();
+		}
+
+		//LabelReplacement 
+		/* ONLY useful if mangling is disabled
+		*/
 		for(var arg in arglist) {
-			var index = line[tokens].indexOf(arglist[arg]);
-			while(index != -1){
-				
-				if(line[tokens][index] == values[arg])
-					break;
-
-				line[tokens][index] = values[arg];
-				var index = line[tokens].indexOf(arglist[arg]);
-			}
-
 			if(line[tokens][0].slice(0,-1) == arglist[arg])
 				line[tokens][0] = values[arg] + ':';
 		}

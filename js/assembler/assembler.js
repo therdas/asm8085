@@ -16,8 +16,26 @@ assembler.stateObject = {
     cwlisting: [],
     errors: [],
     defbuffers: {},             //line -> buffer
-    warnings: []
+    warnings: [],
+    breakPointTable: [],
+    breakPointLineAt: []
 };
+
+assembler.stateObject.reset = function () {
+    assembler.stateObject.document = [];
+    assembler.stateObject.macroTable = [];
+    assembler.stateObject.macroLookupTable = {};
+    assembler.stateObject.symbolTable.decimal = {};
+    assembler.stateObject.symbolTable.hexadecimal = {};
+    assembler.stateObject.referenceTable = {};
+    assembler.stateObject.codePointTable = {};
+    assembler.stateObject.listing = {};
+    assembler.stateObject.cwlisting = [];
+    assembler.stateObject.errors = [];
+    assembler.stateObject.warnings = [];
+    assembler.stateObject.defbuffers = {};
+    assembler.stateObject.breakPointTable = [];
+}
 
 assembler.stateObject.addError = (message, line, info) => assembler.stateObject.errors.push({body: message, at: line, context: info == undefined ? false : info});
 assembler.stateObject.addWarning = (message, line, info) => assembler.stateObject.warnings.push({body: message, at: line, context: info == undefined ? false: info});
@@ -29,6 +47,7 @@ assembler.stateObject.isOrg = (token) => (token == 'org' || token == 'ORG');
 assembler.stateObject.isDef = (token) => (token == 'def' || token == 'DEF');
 assembler.stateObject.isDefarr = (token) => (token == 'defarr' || token == 'DEFARR');
 assembler.stateObject.isDdef = (token) => (token == 'ddef' || token == 'DDEF');
+assembler.stateObject.isBrk = (token) => (token == 'brk' || token == 'BRK');
 
 assembler.tokenize = function() {
     assembler.stateObject.document = assembler.parser.tokenize(assembler.stateObject.rawDocument);
@@ -55,14 +74,12 @@ assembler.preprocess = function() {
 /*Pass 1: Get and Delete from raw Macro definitions*/
 assembler.getMacrosAndClean = function() {
     console.log("PROCESSING FOR MACROS DOCUMENT", assembler.stateObject.document);
-    if(assembler.macro.populateMacroTables()){
-        assembler.macro.removeMacrosFromDoc();
-        return true;
-    }
-    return false;
+    var ret = assembler.macro.populateMacroTables()
+    assembler.macro.removeMacrosFromDoc();
+    return ret;
 }
 
-/*Pass 2: Process IF/ELIF/ELSE/ENDIF, MACRO calls, DUP/ENDD, EQU, EQU replacement*/
+/*Pass 2: Process IF/ELIF/ELSE/ENDIF, MACRO calls, DUP/ENDD, EQU, EQU replacement, BRK*/
 assembler.processExtensions = function() {
     var doc = assembler.stateObject.document;
     var line = 0;
@@ -80,23 +97,33 @@ assembler.processExtensions = function() {
             ++line;
             continue;
         }
+
+        console.log(primary.toUpperCase(), ':::":":');
+        var fmt = assembler.format[primary.toUpperCase()];
+        console.log(hasLabel, assembler.stateObject.isEqu(doc[line][tokens]), assembler.stateObject.isEqu(primary));
         if(assembler.stateObject.isEqu(primary) || (!hasLabel && assembler.stateObject.isEqu(doc[line][tokens][1])) || 
            assembler.stateObject.isDef(primary) || assembler.stateObject.isDdef(primary) || assembler.stateObject.isDefarr(primary))
             ;
         else {
             console.log("REPLACING", doc[line][tokens], "WRT", assembler.stateObject.symbolTable.decimal);
             for(var token = hasLabel ? 2 : 1; token < doc[line][tokens].length; ++token) {
-                if(
-                    doc[line][tokens][token][0] == '{' &&
-                    doc[line][tokens][token].slice(-1) == '}'
-                  )
-                    doc[line][tokens][token] = doc[line][tokens][token].slice(1,-1);
+                console.log(fmt == undefined ? false : fmt[token], assembler.parser.type(doc[line][tokens][token]));
+                if(fmt != undefined && fmt[hasLabel ? token - 2: token - 1] == 'name')
+                    continue;
+                if(assembler.parser.type(doc[line][tokens][token].toUpperCase()) == 'name')
+                    continue;
                 doc[line][tokens][token] = assembler.symbol.processToken(doc[line][tokens][token]);
                 console.log("REPL", doc[line][tokens][token]);
             }
         }
 
-        if (assembler.stateObject.isMacro(primary)) {
+        if(assembler.stateObject.isBrk(primary)) {
+            assembler.stateObject.breakPointLineAt.push(line);
+            var temp = doc.slice(0, line);
+            temp.push.apply(temp, doc.slice(line+1));
+            assembler.stateObject.document = temp;
+            doc = assembler.stateObject.document;
+        } else if (assembler.stateObject.isMacro(primary)) {
             var macroBody = assembler.stateObject.macroTable[assembler.stateObject.macroLookupTable[primary]];
             //TODO this is akin to hitting the object with a hammer and then 
             //tryna superglue it back together. Oh Well. Fix this.
@@ -257,7 +284,7 @@ assembler.gatherReferences = function () {
         if(doc[line][tokens][0].slice(-1) == ':')
             hasLabel = true;
         
-        var keyword = doc[line][tokens][hasLabel ? 1 : 0];
+        var keyword = doc[line][tokens][hasLabel ? 1 : 0].toUpperCase();
         if(assembler.stateObject.isOrg(keyword)) {
             isOrg = true;
             var next = assembler.parser.parseVal(
@@ -265,7 +292,9 @@ assembler.gatherReferences = function () {
                 assembler.stateObject.symbolTable.decimal
             );
 
-            if(next == false) {
+            next = assembler.parser.pad(next, 4);
+
+            if(next === false) {
                 assembler.stateObject.addError('ASM_ORG_INVALIDVALUE', lineInCode, {value: doc[line][tokens].slice(hasLabel ? 2 : 1).join(" ")});
                 continue;
             }
@@ -283,7 +312,7 @@ assembler.gatherReferences = function () {
         
         var size = assembler.sizeOf(keyword);
         if(size == false && !isOrg && !isDef) {
-            assembler.stateObject.addError('ASM_ORG_INVALIDKEYWORD', lineInCode, {value: keyword});
+            assembler.stateObject.addError('ASM_REF_INVALIDKEYWORD', lineInCode, {value: keyword});
             continue;
         }
 
@@ -334,7 +363,7 @@ assembler.assembleCode = function (){
             continue;
 
 		if(fmt == undefined) {
-			assembler.stateObject.addError('ASM_ASM_INVALIDKEYWORD', lineAtCode, {key: keyword});
+			assembler.stateObject.addError('ASM_ASM_INVALIDKEYWORD', lineAtCode, {value: keyword});
 			continue;
 		}
 
@@ -350,14 +379,17 @@ assembler.assembleCode = function (){
         //Type upgrading 
         //If RST1 then argument _is_ as it should be
         if(keyword == 'RST') {
-            ;//Skip
+            if(args[0].slice(-1) == 'H')
+                args[0] = args[0].slice(0,-1);
         } else    
             for(var i in args)
                 if(fmt[i] == '8-bit' || fmt[i] == '16-bit') {
                     var res = assembler.parser.parseVal(args[i], assembler.stateObject.symbolTable.decimal);
                     console.log("RESULT", res, "of", args[i]);
-                    args[i] = res == false ? args[i] : res;
+                    args[i] = res === false ? args[i] : res;
                     console.log(args);
+                } else if(fmt[i] == 'name') {
+                    args[i] = args[i].toUpperCase();
                 }
 
         //Padding and width checking
@@ -397,7 +429,7 @@ assembler.assembleCode = function (){
             else
                 code = assembler.codeOf[keyword][accessors[0]][accessors[1]].code;
         } catch(err) {
-            assembler.stateObject.addError('ASM_ASM_MALFORMEDINSTR', lineAtCode);
+            assembler.stateObject.addError('ASM_ASM_MALFORMEDINSTR', lineAtCode, {keyword: keyword, format: fmt});
             continue;
         }
         var size = assembler.sizeOf(keyword);
@@ -429,19 +461,16 @@ assembler.assembleCode = function (){
                 }
             }
             
-        if(keyword == 'RST')
-            ;
-        else
         var cwl = {};
         //Arglist is complete at this time, begin creation of code
         assembler.stateObject.listing[current] = code;
-        cwl["line"] = doc[line][tokens].join(" ");
+        cwl["line"] = doc[line][tokens].slice(0, hasLabel ? 2 : 1).join(" ") + " " + doc[line][tokens].slice(hasLabel? 2: 1).join(", ");
         cwl["codes"] = {};
         cwl["codes"][current] = code;
         current = assembler.parser.incrementHex(current, 4);
-        if(keyword == 'RST')
+        if(keyword == 'RST'){
             ; //Skip, args are not ARGS
-        else
+        } else {
             for(var type in fmt) {
                 if(fmt[type] == '8-bit') {
                     assembler.stateObject.listing[current] = args[type];
@@ -457,6 +486,7 @@ assembler.assembleCode = function (){
                     current = assembler.parser.incrementHex(current, 4);
                 }
             }
+        }
         assembler.stateObject.cwlisting.push(cwl);
 	}
 }
@@ -476,15 +506,32 @@ assembler.addDefBuffers = function() {
     }
 }
 
-assembler.DEBUGCOMPILE = function(str) {
+assembler.resolveBreakpoints = function() {
+    for(var breakpoint in assembler.stateObject.breakPointLineAt) {
+        var line = assembler.stateObject.breakPointLineAt[breakpoint];
+        while(!(--line in assembler.stateObject.codePointTable)){
+            if(line < 0)
+                break;
+            console.log(line, line in assembler.stateObject.codePointTable);
+        }
+        if(line < 0)
+            continue;
+        else {
+            assembler.stateObject.breakPointTable.push(assembler.stateObject.codePointTable[line]);
+        }
+    }
+}
+
+assembler.compile = function(str) {
+    assembler.stateObject.reset();
     assembler.stateObject.rawDocument = str;
     assembler.preprocess();
     assembler.getMacrosAndClean();
     assembler.processExtensions();
     assembler.getDefBuffers();
     assembler.gatherReferences();
-    console.log("COMPILING", assembler.stateObject.document);
     assembler.assembleCode();
     assembler.addDefBuffers();
-    console.log(assembler.stateObject);
+    assembler.resolveBreakpoints();
+    return JSON.parse(JSON.stringify(assembler.stateObject));
 }

@@ -43,7 +43,7 @@ assembler.parser.isDec = function (token) {
 assembler.parser.type = function(token) {
     token = token + '';
 
-	if(['A', 'B', 'C', 'D', 'E', 'H', 'L', 'SP', 'PC', 'M'].includes(token))
+	if(['A', 'B', 'C', 'D', 'E', 'H', 'L', 'SP', 'PC', 'M', 'PSW'].includes(token))
 		return('name');
 	else if(token.length == 4 && assembler.parser.isHex(token, 16))
 		return '16-bit';
@@ -66,13 +66,55 @@ assembler.parser.incrementHex = function (hex){
 	return assembler.parser.pad((parseInt(hex, 16) + 1).toString(16), 4).toUpperCase();
 }
 
+/*Splitter*/
+assembler.parser.splitter = function(s) {
+	var lst = [];
+	var i = 0;
+	var hasLabel = s.indexOf(':') == -1 ? false : true;
+	if(hasLabel) {
+		lst[i] = s.substring(0, s.indexOf(':') + 1);
+		console.log("LABEL ", s, "::", lst[i]);
+		s = s.substring(s.indexOf(':') + 1).trim();
+		lst[i] = lst[i].trim();
+		++i;		
+	}
+	console.log("THEN ", s);
+
+	var keywordIndex = s.indexOf('=');
+	if(keywordIndex == -1)
+		keywordIndex = s.indexOf(' ');
+
+	lst[i] = s.substring(0, keywordIndex).trim();
+	var primary = s.substring(0, keywordIndex).trim();
+	console.log(s, keywordIndex);
+	s = s.substring(keywordIndex).trim();
+	++i;
+
+	/*Handle case of =*/
+	var temp = s.trim();
+	var hasEqu = temp.indexOf('=') == -1 ? false : true;
+
+	if(hasEqu) {
+		lst[i] = s.substring(0, s.indexOf('=') + 1).trim();
+		s = s.substring(s.indexOf('=') + 1).trim();
+		++i;
+	}
+	
+	if(['if', 'IF', 'else', 'ELSE', 'elif', 'ELIF'].includes(primary))
+		lst = lst.concat(s.split(/[ ,]/)).map(n => n.trim());
+	else
+		lst = lst.concat(s.split(',').map(n => n.trim()));
+
+	return lst;
+}
+
 /*NO SPLIT AT {...} for evaluation purposes.*/
 assembler.parser.tokenize = function(string) {
 	var lines = string.split('\n');
 	var tokens = [];
 	for(var i in lines) {
 		tokens[i] = [];
-		tokens[i][1] = lines[i].trim().split(/[\s,]+(?![^{]*})/);
+		tokens[i][1] = assembler.parser.splitter(lines[i].trim());
 		tokens[i][1] = tokens[i][1].filter(n => n);
 		tokens[i][0] = i;
 	}
@@ -98,6 +140,23 @@ assembler.parser.decFromHex = function(value) {
 	return parseInt(value, 16);
 }
 
+/*Returns a simplified version of the expression*/
+/* symtab contains symbols with decimal values
+** ssymtab contains symbols with literal values (as in string lit.)
+*/
+assembler.parser.simplify = function(expr, symtab, ssymtab) {
+	var fin;
+	try {
+		fin = assembler.parser.exprParser.parse(expr).simplify(symtab).toString();
+		for(var symbol in ssymtab) {
+			fin = assembler.parser.exprParser.parse(fin).substitute(symbol, ssymtab[symbol]).toString();
+		}
+	} catch(err) {
+		fin = false;
+	}
+	return fin;
+}
+
 /*Returns the hexadecimal value of a string as per following rules:
 	If value is like '%h' or '%H', returns is as is without suffix. Otherwise:
 		If value can be decimal, convert to hex and return
@@ -106,32 +165,80 @@ assembler.parser.decFromHex = function(value) {
 		If value is none of the above, return false.
 	Always returns either a hex value or false.
 */
+assembler.parser.twosComplement = function(str, base) {
+	var digitsPer = Math.ceil(Math.log2(base));
+	var padTo = str.length;
+	if(str.length > 0 && str.length < 4)
+		padTo = 2;
+	else if(str.length >= 4)
+		padTo = 4;
+	str = assembler.parser.pad(parseInt(str, base).toString(2), padTo * digitsPer);
+	var ret = "";
+	console.log("CONVERTING", str);
+	var oneEncountered = false;
+	for(var i = str.length - 1; i >= 0; --i) {
+		if(oneEncountered) {
+			ret = (str[i] == '1' ? '0' : '1') + ret;
+		} else {
+			ret = str[i] + ret;
+			if(str[i] == '1')
+				oneEncountered = true;
+		}
+	}
+	return parseInt(ret, 2).toString(base).toUpperCase();
+}
+
 assembler.parser.parseVal = function(value, decSymbolTable, returnDecimal) {
     if(value == undefined) return false;
     if(returnDecimal == undefined) returnDecimal = false;
     if(assembler.parser.type(value) == 'name') return false;
+	
+	var isNeg = false;
+    //check for negative
+    if(value[0] == '-'){
+    	console.log("ISNEGATIVE");
+    	value = value.slice(1);
+    	isNeg = true;
+     }
+
 	var isHex = false;
 	if (value.slice(-1) == 'H' || value.slice(-1) == 'h') {
 		isHex = true;
-        console.log('HHHHHH');
 		value = value.slice(0,-1);
 	}
 
 	if(!isHex) {
-		if(assembler.parser.isDec(value))
-			return assembler.parser.hexFromDec(value);
-		else if(assembler.parser.isHex(value))
-			return value;
+		if(assembler.parser.isDec(value)){
+			var ret = assembler.parser.hexFromDec(value).toUpperCase();
+			ret = isNeg ? assembler.parser.twosComplement(ret, 16): ret;
+			console.log("ISDEC", ret, assembler.parser.twosComplement(ret, 16));
+			return returnDecimal ? value: ret;
+		}
+		else if(assembler.parser.isHex(value)){
+			var ret = value.toUpperCase();
+			ret = isNeg ? assembler.parser.twosComplement(ret, 16): ret;
+			console.log("ISHEX", ret);
+			return returnDecimal ? parseInt(value, 16) : ret;
+		}
 		else {
 			var res = assembler.parser.parseExpr(value, decSymbolTable);
+            
             if(!returnDecimal)
                 res = res.toString(16).toUpperCase();
+
+            if(isNeg && !returnDecimal && res != 'FALSE')
+            	res = isNeg ? assembler.parser.twosComplement(res, 16): res;
+
             return res == 'FALSE' ? false : res;
         }
 	} else {
 		if(assembler.parser.isHexWithoutSuffix(value)){
-			return returnDecimal ? assembler.parser.decFromHex(value).toString() : value;
-        }else
+			var res = returnDecimal ? assembler.parser.decFromHex(value).toString() : value.toUpperCase();
+			if(!returnDecimal && isNeg) {
+				res = assembler.parser.twosComplement(res, 16);
+			}
+			return res;
+        } else
 			return false;
 	}
 }
