@@ -25,13 +25,13 @@ assembler.macro.getMacroEndLine = function(at, lines) {
 	var step = 0;
 
 	while(i < doc.length && sp != 0) {
-		if(doc[i - 1][tokens].includes('MACRO') || doc[i - 1][tokens].includes('macro'))
+		if(doc[i][tokens].includes('MACRO') || doc[i][tokens].includes('macro'))
 			++sp;
-		else if(doc[i - 1][tokens].includes('ENDM') || doc[i - 1][tokens].includes('endm'))
+		else if(doc[i][tokens].includes('ENDM') || doc[i][tokens].includes('endm'))
 			--sp;
 		
 		if(sp == 0)
-			return i- 1;
+			return i;
 		
 		++i;
 	}
@@ -124,12 +124,14 @@ assembler.macro.populateMacroTables = function() {
 	assembler.stateObject.macroLookupTable = {	};
 
 	//Create macros
-	for(var line in doc)
+	for(var line in doc){
+		console.log("GATHERING AT " + line);
 		if(doc[line][tokens].includes('MACRO') || doc[line][tokens].includes('macro')){
 			var current = assembler.macro.getMacroFromLine(line);
             console.log("GATHERED", current);
 			ok = ok ? current: false;
 		}
+	}
 
 	if(ok){
 		assembler.macro.cleanMacros();
@@ -147,18 +149,21 @@ assembler.macro.removeSingleMacro = function(at) {
 	var end = assembler.macro.getMacroEndLine(at);
 
 	if(end == false) {
+		console.log("CLEANED AT " + at);
 		return false;
 	}
 
 	final.push.apply(final, doc.slice(end + 1));
 
 	assembler.stateObject.document = final;
+	return true;
 }
 
 assembler.macro.removeMacrosFromDoc = function() {
 	var i = 0;
 	var tokens = 1;
 	while(i < assembler.stateObject.document.length) {
+		console.log("removing at " + i + assembler.stateObject.document[i]);
 		if(
 			assembler.stateObject.document[i][tokens].includes('macro') ||
 			assembler.stateObject.document[i][tokens].includes('MACRO')
@@ -220,8 +225,8 @@ assembler.macro.expandArgs = function(body, arglist, values) {
 	var SYMTAB = {};
 	var SSYMTAB = {};
 	for(var i = 0; i < arglist.length; ++i){
-		var val = parseInt(values[i], 16);
-		if(temp !== NaN)
+		var val = parseInt(assembler.parser.parseVal(values[i], {}, true));
+		if(!isNaN(val))
 			SYMTAB[arglist[i]] = val;
 		else
 			SSYMTAB[arglist[i]] = values[i];
@@ -234,6 +239,7 @@ assembler.macro.expandArgs = function(body, arglist, values) {
 
 		for(var token in line[tokens]) {
 			var temp = assembler.parser.simplify(line[tokens][token], SYMTAB, SSYMTAB);
+			console.log(line[tokens][token], SYMTAB, SSYMTAB);
 			if (temp === false)
 				;
 			else
