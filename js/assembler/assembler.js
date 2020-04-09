@@ -182,7 +182,7 @@ assembler.processExtensions = function() {
             var end = assembler.dup.getEndLine(line);
             var toReplace = assembler.dup.expand(line, assembler.stateObject.symbolTable.decimal);
             
-            if(end == false || toReplace == false)  {
+            if(end == false || toReplace === false)  {
                 assembler.stateObject.addWarning('ASM_PE_CANTEXPANDDUP', lineAt);
                 ++line; continue;
             }
@@ -223,7 +223,7 @@ assembler.getDefBuffers = function () {
                 assembler.stateObject.defbuffers[line] = ["00"];
             else {
                var value = assembler.parser.parseVal(args.join(" "), assembler.stateObject.symbolTable.decimal);
-                if(value == false){
+                if(value === false){
                     assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", lineInCode, {value: args.join(" ")});
                     continue
                 }
@@ -238,7 +238,7 @@ assembler.getDefBuffers = function () {
                 assembler.stateObject.defbuffers[line] = ["00", "00"];
             else {
                var value = assembler.parser.parseVal(args.join(" "));
-                if(value == false){
+                if(value === false){
                     assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", lineInCode, {value: args.join(" ")});
                     continue;
                 }
@@ -255,12 +255,11 @@ assembler.getDefBuffers = function () {
                 assembler.stateObject.defbuffers[line] = [];
                 var length = args.length;
                 for(var arg in args){
-
-                    if(!assembler.parser.isHex(args[arg])){
+                    var value = assembler.parser.parseVal(args[arg]);
+                    if(value === false){
                         assembler.stateObject.addError("ASM_DEF_INVALIDVALUE", lineInCode, {value: args[arg]});
                         break;
                     }
-                    var value = assembler.parser.parseVal(args[arg]);
                     if(value.length > 2)
                         assembler.stateObject.addWarning("ASM_DEF_TOOLONG8", lineInCode, {value: args[arg]});
                     assembler.stateObject.defbuffers[line].push(assembler.parser.pad(value, 2).slice(-2));
@@ -294,7 +293,7 @@ assembler.gatherReferences = function () {
 
             next = assembler.parser.pad(next, 4);
 
-            if(next === false) {
+            if(next === false || next === 'false') {
                 assembler.stateObject.addError('ASM_ORG_INVALIDVALUE', lineInCode, {value: doc[line][tokens].slice(hasLabel ? 2 : 1).join(" ")});
                 continue;
             }
@@ -463,6 +462,9 @@ assembler.assembleCode = function (){
             
         var cwl = {};
         //Arglist is complete at this time, begin creation of code
+        if(current in assembler.stateObject.listing) {
+            assembler.stateObject.addWarning('ASM_ASM_OVERWRITES', lineAtCode, {address: current});
+        }
         assembler.stateObject.listing[current] = code;
         cwl["line"] = doc[line][tokens].slice(0, hasLabel ? 2 : 1).join(" ") + " " + doc[line][tokens].slice(hasLabel? 2: 1).join(", ");
         cwl["codes"] = {};
@@ -473,13 +475,24 @@ assembler.assembleCode = function (){
         } else {
             for(var type in fmt) {
                 if(fmt[type] == '8-bit') {
+                    if(current in assembler.stateObject.listing) {
+                        assembler.stateObject.addWarning('ASM_ASM_OVERWRITES', lineAtCode, {address: current});
+                    }
+
                     assembler.stateObject.listing[current] = args[type];
                     cwl.codes[current] = args[type];
                     current = assembler.parser.incrementHex(current, 4);
                 } else if(fmt[type] == '16-bit') {
+                    if(current in assembler.stateObject.listing) {
+                        assembler.stateObject.addWarning('ASM_ASM_OVERWRITES', lineAtCode, {address: current});
+                    }
                     assembler.stateObject.listing[current] = args[type].slice(-2);
                     cwl.codes[current] = args[type].slice(-2);
                     current = assembler.parser.incrementHex(current, 4);
+
+                    if(current in assembler.stateObject.listing) {
+                        assembler.stateObject.addWarning('ASM_ASM_OVERWRITES', lineAtCode, {address: current});
+                    }
 
                     assembler.stateObject.listing[current] = args[type].slice(0,-2);
                     cwl.codes[current] = args[type].slice(0,-2);
@@ -500,6 +513,9 @@ assembler.addDefBuffers = function() {
         var sourceLine = buffer;
         var address = assembler.stateObject.codePointTable[sourceLine];
         for(var word in currentBuffer) {
+            if(address in assembler.stateObject.listing) {
+                assembler.stateObject.addWarning('ASM_DEF_OVERWRITES', buffer, {address: address});
+            }
             assembler.stateObject.listing[address] = currentBuffer[word];
             address = assembler.parser.incrementHex(address, 4);
         }

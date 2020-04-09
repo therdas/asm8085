@@ -52,6 +52,7 @@ AMSYM_NOLABEL: {value}				No label for Def statement
 mesg["ASM_PE_CANTEXPANDMACRO"] 	= (at, context) => 'Cannot expand macro';
 mesg["ASM_PE_CANTRESOLVECOND"] 	= (at, context) => 'Cannot resolve IF/ELIF/ELSE block';
 mesg["ASM_DEF_INVALIDVALUE"] 	= (at, context) => "Invalid value " + context.value + " for DEF statement";
+mesg["ASM_DEF_OVERWRITES"] 		= (at, context) => "Def statement at line " + at + " overwrites preassembled memory at " + context.address;
 mesg["ASM_ORG_INVALIDVALUE"] 	= (at, context) => "Invalid value " + context.value + " for ORG statement";
 mesg["ASM_REF_INVALIDKEYWORD"] 	= (at, context) => 'Keyword "' + context.value + '" unexpected here';
 mesg["ASM_ASM_INVALIDKEYWORD"] 	= (at, context) => '"' + context.value + '" is not an instruction';
@@ -59,6 +60,7 @@ mesg["ASM_ASM_WRONGNOOFARGS"] 	= (at, context) => "Wrong number of arguments, ex
 mesg["ASM_ASM_MALFORMEDINSTR"] 	= (at, context) => 'The instruction "' + context.keyword + '" is not properly formed, it requires ' + context.format.length + ' arguments, namely: ' + context.format.join(', ');
 mesg["ASM_ASM_NOLABELMATCH"] 	= (at, context) => 'The label "' + context.value + '" isn\'t present in the program';
 mesg["ASM_ASM_NOLABELADDR"] 	= (at, context) => 'The label "' + context.value + '" is present in the program but the assembler failed to assign an address to it.';
+mesg["ASM_ASM_OVERWRITES"] 		= (at, context) => "The line " + at + " overwrites preassembled memory at " + context.address;
 mesg["ASM_TRAP_COMPILERERROR"] 	= (at, context) => 'The compiler has experienced a general failure, at ' + context.stack;
 mesg["AMCOND_NOEND"] 			= (at, context) => 'The conditional block starting at ' + at +' has no corresponding ENDIF statement';
 mesg["AMDUP_NOEND"] 			= (at, context) => 'The duplication block starting at ' + at + ' has no corresponding ENDD';

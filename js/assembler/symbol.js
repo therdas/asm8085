@@ -38,7 +38,7 @@ assembler.symbol.registerSymbol = function (at, symtab) {
         if(value.indexOf(',') !== -1) {
             value = (value + '').split(',');
             assembler.stateObject.symbolTable.decimal[label] = [];
-            assembler.stateObject.symbolTable.decimal[label] = [];
+            assembler.stateObject.symbolTable.hexadecimal[label] = [];
             for(var i in value) {
                 assembler.stateObject.symbolTable.decimal[label].push(parseInt(value[i]));
                 assembler.stateObject.symbolTable.hexadecimal[label].push(assembler.parser.hexFromDec(value[i]));

@@ -545,7 +545,7 @@ function compileCode() {
 	}
 
 	for(var i in stateObject.warnings) {
-		addWarning(mesg[stateObject.warnings[i].body](stateObject.warnings[i].at, stateObject.warnings[i].warnings), stateObject.warnings[i].at);
+		addWarning(mesg[stateObject.warnings[i].body](stateObject.warnings[i].at, stateObject.warnings[i].context), stateObject.warnings[i].at);
 	}
 
 
@@ -557,27 +557,37 @@ function compileCode() {
 	}
 
 	var cwlisting = stateObject.cwlisting;
+	var listing = stateObject.listing;
+	var seenAddresses = [];
 
-	var colors = ["#0DA1FE","#0BCBE6","#00FCD7","#0BE687","#0DFE51","#FC990D"];
-	var colorI = 0;
-	var totalListing = "<tr><th>Address</th><th>Data</th><th>Instruction</th></tr>";
-	for(var i in cwlisting) {
-		var str = "<tr><td rowspan=" + Object.keys(cwlisting[i].codes).length +
-		" style=\"border-right-color: " + colors[colorI] +
-		"; border-right-width: 2px; border-right-style: solid;\">" + cwlisting[i].line + "</td>";
-		var first = true;
-		for(var j in cwlisting[i].codes) {
-			if(first) {
-				first = !first; 
-			} else {
-				str += '<tr>';
+	if(stateObject.errors.length == 0) {
+		var colors = ["#0DA1FE","#0BCBE6","#00FCD7","#0BE687","#0DFE51","#FC990D"];
+		var colorI = 0;
+		var totalListing = "<tr><th>Address</th><th>Data</th><th>Instruction</th></tr>";
+		for(var i in cwlisting) {
+			var str = "<tr><td rowspan=" + Object.keys(cwlisting[i].codes).length +
+			" style=\"border-right-color: " + colors[colorI] +
+			"; border-right-width: 2px; border-right-style: solid;\">" + cwlisting[i].line + "</td>";
+			var first = true;
+			for(var j in cwlisting[i].codes) {
+				if(first) {
+					first = !first; 
+				} else {
+					str += '<tr>';
+				}
+				str += '<td>' + j + '</td><td>' + cwlisting[i].codes[j] + '</td></tr>';
+				seenAddresses.push(j);
 			}
-			str += '<td>' + j + '</td><td>' + cwlisting[i].codes[j] + '</td></tr>';
+			totalListing += str;
+			colorI = (colorI + 1) % colors.length;
 		}
-		totalListing += str;
-		colorI = (colorI + 1) % colors.length;
+		for(var i in listing) {
+			if(!(seenAddresses.includes(i))) {
+				totalListing += '<tr><td>By <code>def<code>,<code>ddef<code> or <code>defarr<code></td><td>'+i+'</td><td>'+listing[i]+"</td></tr>";
+			}
+		}
+		document.querySelector('#listing-table').innerHTML = totalListing;
 	}
-	document.querySelector('#listing-table').innerHTML = totalListing;
 
 	/*for(var i = 0; i < total.debug.listing.length; ++i) {
 		if(total.debug.listing[i] == undefined)

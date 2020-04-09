@@ -221,6 +221,7 @@ assembler.parser.parseVal = function(value, decSymbolTable, returnDecimal) {
 			return returnDecimal ? parseInt(value, 16) : ret;
 		}
 		else {
+			console.log("ISNEITHER");
 			var res = assembler.parser.parseExpr(value, decSymbolTable);
             
             if(!returnDecimal)
@@ -233,6 +234,7 @@ assembler.parser.parseVal = function(value, decSymbolTable, returnDecimal) {
         }
 	} else {
 		if(assembler.parser.isHexWithoutSuffix(value)){
+			console.log("ISHEXPROPER");
 			var res = returnDecimal ? assembler.parser.decFromHex(value).toString() : value.toUpperCase();
 			if(!returnDecimal && isNeg) {
 				res = assembler.parser.twosComplement(res, 16);
