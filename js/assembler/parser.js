@@ -81,7 +81,7 @@ assembler.parser.splitter = function(s) {
 	console.log("THEN ", s);
 
 	var keywordIndex = s.indexOf('=');
-	if(keywordIndex == -1)
+	if(keywordIndex == -1 || (keywordIndex != -1 && s.substring(0, keywordIndex).indexOf(' ') != -1))
 		keywordIndex = s.indexOf(' ');
 
 	lst[i] = s.substring(0, keywordIndex).trim();
@@ -92,7 +92,7 @@ assembler.parser.splitter = function(s) {
 
 	/*Handle case of =*/
 	var temp = s.trim();
-	var hasEqu = temp.indexOf('=') == -1 ? false : true;
+	var hasEqu = temp.indexOf('=') != -1 && s.substring(0, temp.indexOf('=')).indexOf(' ') == -1 ? true : false;
 
 	if(hasEqu) {
 		lst[i] = s.substring(0, s.indexOf('=') + 1).trim();

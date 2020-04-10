@@ -24,7 +24,7 @@ Labels can generally be anything, and include anything, including numbers. Howev
 + Lables are case-sensitive, that is, `MyLabel: …` is different from `mylabel: …`
 + A label must not be entirely made of numbers and the letters A, B, C, D, E or F (case-insensitive), as that might be confused with a number, due to neutrino's duck-typing.
 
-For best practises, it is recommended that you follow the same naming rule as is used in naming C variables.
+For best practises, it is recommended that you follow the same naming rule as is used in naming C variables, along with not using any proper `name`s, that is, the names of the registers (namely, a, b, c, d, e, h, l, sp, psw, pc)
 
 ### Keywords
 Every documented 8085 instruction is included in neutrino. In addition, keywords are not case-sensitive (unlike labels). That is, these are roughly equivalent:
@@ -129,7 +129,7 @@ Same as `DEF` but takes a comma separated list, and places them one by one in me
 
 ## Advanced features of Neutrino
 
-### EQU or =
+### EQU/= or Symbols
 ```assembler
 [label:] equ value ;or
 label = value
@@ -194,8 +194,13 @@ Some general constraints for arrays are:
 	mvi a, arr[2]	;equivalent to mvi a, 6CH
 	mvi b, #arr 	;equivalent to mvi b, 05H
 ```
+Unlike arrays, string literal arrays cannot be used in expressions.
 
-#### An assembly time string output program
+#### Expression format
+The expression evaluation engine is [silentmatt](https://github.com/silentmatt/)'s excellent [expr-eval](https://github.com/silentmatt/expr-eval), and supports everything that supports, with the addition of strings as arrays.
+
+
+#### An assemble-time string output program
 The following program outputs a string to port `86H`:
 ```assembler
 	port = 86H 			;We output to port 86H
@@ -231,3 +236,45 @@ The following program outputs a string to port `86H`:
 |0005||6F|
 |0004|hlt|76|
 
+## if-elif-else or Conditionals
+Neutrino supports if-elif-else conditionals. The general format is as follows:
+```assembly
+	if <condition>
+		<body>
+	elif <condition>
+		<body>
+		…
+	else
+		<body>
+	endif
+```
+
+The condition _must_ be a expression without any hexadecimal values, or a atomic hexadecimal value.
+The assembler has some quirks, one being that the different keywords, while _within_ a `if`/`endif` block are distinguished on basis of their number of arguments, not the keyword, per se. That means a `elif` with no arguments will be treated as an `else`.
+
+## Macros
+Neutrino includes a powerful macro subsystem with proper label/variable mangling, general argument substitution, nested macros, macro hoisting, and, with the help of the conditional directives, recursion.
+
+### Format
+The general format of a macro is:
+```assembler
+  name: macro arg1, arg2, …
+	locals l1, l2, l3 …
+	;body
+/mangledLabel: ;body
+	…
+	endm
+```
+
+```
+      l2: macro x, y, z
+          locals q
+          mvi a, x
+          mov b, y
+          mov c, z
+          q = 15
+          mvi d, q
+          endm
+
+          l2 15, B, C
+```

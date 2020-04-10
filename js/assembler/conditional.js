@@ -122,13 +122,13 @@ assembler.conditional.processDTree = function(dtree, symtab) {
             else
                 condition[token] = temp;
         }
-        var finalCondition = condition.join(" ");
+        var finalCondition = condition.join("");
         console.log("CORRECTED CONDITION ", condition);
         var evaluated = assembler.parser.parseExpr(finalCondition, symtab);
         console.log(finalCondition, "EVALUATES TO", evaluated);
 
-        if(evaluated == false)
-            return false;
+        if(evaluated == false && condition != '')
+            continue;
 
         if(condition == '' || evaluated == true || (evaluated != false && evaluated != 0)) {
             return dtree[node].body;

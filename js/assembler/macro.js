@@ -56,7 +56,8 @@ assembler.macro.getMacroFromLine = function(at) {
 	while(i < end) {
 		if(doc[i][tokens][0][0] == '/')	
 			localsDirectory.push(doc[i][tokens][0].slice(0,-1));
-		if(doc[i][tokens][0] == 'LOCAL'){
+		if(doc[i][tokens][0].toUpperCase() == 'LOCALS'){
+			console.log('GOTLOCALSYEAH-------------------------')
 			localsDirectory.push.apply(localsDirectory, doc[i][tokens].slice(1));
 			++i;
 			continue;
