@@ -55,7 +55,7 @@ assembler.macro.getMacroFromLine = function(at) {
 	var i = parseInt(at) + 1;
 	while(i < end) {
 		if(doc[i][tokens][0][0] == '/')	
-			localsDirectory.push(doc[i][tokens][0].slice(0,-1));
+			localsDirectory.push(doc[i][tokens][0].slice(1,-1));
 		if(doc[i][tokens][0].toUpperCase() == 'LOCALS'){
 			console.log('GOTLOCALSYEAH-------------------------')
 			localsDirectory.push.apply(localsDirectory, doc[i][tokens].slice(1));
@@ -194,14 +194,15 @@ assembler.macro.mangleLocals = function(body, locals, index) {
 		//First check if the line is labelled,
 		if(line[tokens][0].slice(-1) == ':') {
 			//and if label is the same as any of the locals,
-			if(locals.includes(line[tokens][0].slice(0,-1))) {
+			if(locals.includes(line[tokens][0].slice(1,-1))) {
 				//mangle it.
-				line[tokens][0] = assembler.macro.mangleLocal(line[tokens][0].slice(0,-1), index) + ":";
+				line[tokens][0] = assembler.macro.mangleLocal(line[tokens][0].slice(1,-1), index) + ":";
 			}
 		}
 
 		for(var token in line[tokens]) {
 			var temp = assembler.parser.simplify(line[tokens][token], {}, SUBSYMTAB);
+			console.log("MANGLING LOCALS AT ", SUBSYMTAB, "========================= ", temp)
 			if(temp !== false)
 				line[tokens][token] = temp;
 		}

@@ -76,5 +76,5 @@ mesg["ASM_DEF_TOOLONG8"] 		= (at, context) => 'The DEF or DEFARR statement expec
 mesg["ASM_DEF_TOOLONG16"] 		= (at, context) => 'The DDEF statement expects a value of size 2 bytes. Truncating ' + context.value + ' to ' + context.value.slice(-4);
 mesg["ASM_ORG_TOOLONG16"] 		= (at, context) => 'The ORG statement expects a value of size 2 bytes. Truncating ' + context.value + ' to ' + context.value.slice(-4);
 mesg["ASM_ASM_TOOLONG8"] 		= (at, context) => '8-bit operand expected, truncating ' + context.value + ' to ' + context.value.slice(-2);
-mesg["ASM_ASM_TOOLONG8"] 		= (at, context) => '16-bit operand expected, truncating ' + context.value + ' to ' + context.value.slice(-4);
+mesg["ASM_ASM_TOOLONG8"] 		= (at, context) => '16-bit operand expected, truncating ' + context.value + ' to ' + context.value.slice(-2);
 mesg["AMSYM_NOLABEL"] 			= (at, context) => 'The define statement has no label, and will not be usable';
