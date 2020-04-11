@@ -483,6 +483,7 @@ assembler.stateObject.reset = function () {
     assembler.stateObject.warnings = [];
     assembler.stateObject.defbuffers = {};
     assembler.stateObject.breakPointTable = [];
+    assembler.stateObject.breakPointLineAt = [];
 }
 
 assembler.stateObject.addError = (message, line, info) => assembler.stateObject.errors.push({body: message, at: line, context: info == undefined ? false : info});
