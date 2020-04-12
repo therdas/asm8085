@@ -9,6 +9,7 @@ Neutrino is a simple 8085 assembler written in plain ol' JavaScript. The goal wh
 + Conditional Assembly
 + A fully featured Macro system, with proper name mangling and recursion.
 + A simple, understandable language based on popular microprocessor texts on 8085, with duck-typing and automatic conversion from decimal numbers.
+[Open in App](therdas://neutrinoRuntime)
 
 ## Table of Contents
 1. [Basic Syntax](#syntax)
