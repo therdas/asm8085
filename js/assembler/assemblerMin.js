@@ -67,7 +67,7 @@ AMSYM_NOLABEL: {value}				No label for Def statement
 mesg["ASM_PE_CANTEXPANDMACRO"] 	= (at, context) => 'Cannot expand macro';
 mesg["ASM_PE_CANTRESOLVECOND"] 	= (at, context) => 'Cannot resolve IF/ELIF/ELSE block';
 mesg["ASM_DEF_INVALIDVALUE"] 	= (at, context) => "Invalid value " + context.value + " for DEF statement";
-mesg["ASM_DEF_OVERWRITES"] 		= (at, context) => "Def statement at line " + at + " overwrites preassembled memory at " + context.address;
+mesg["ASM_DEF_OVERWRITES"] 		= (at, context) => "Def statement at this line overwrites preassembled memory at " + context.address;
 mesg["ASM_ORG_INVALIDVALUE"] 	= (at, context) => "Invalid value " + context.value + " for ORG statement";
 mesg["ASM_REF_INVALIDKEYWORD"] 	= (at, context) => 'Keyword "' + context.value + '" unexpected here';
 mesg["ASM_ASM_INVALIDKEYWORD"] 	= (at, context) => '"' + context.value + '" is not an instruction';
@@ -75,18 +75,19 @@ mesg["ASM_ASM_WRONGNOOFARGS"] 	= (at, context) => "Wrong number of arguments, ex
 mesg["ASM_ASM_MALFORMEDINSTR"] 	= (at, context) => 'The instruction "' + context.keyword + '" is not properly formed, it requires ' + context.format.length + ' arguments, namely: ' + context.format.join(', ');
 mesg["ASM_ASM_NOLABELMATCH"] 	= (at, context) => 'The label "' + context.value + '" isn\'t present in the program';
 mesg["ASM_ASM_NOLABELADDR"] 	= (at, context) => 'The label "' + context.value + '" is present in the program but the assembler failed to assign an address to it.';
-mesg["ASM_ASM_OVERWRITES"] 		= (at, context) => "The line " + at + " overwrites preassembled memory at " + context.address;
+mesg["ASM_ASM_OVERWRITES"] 		= (at, context) => "The line overwrites preassembled memory at " + context.address;
 mesg["ASM_TRAP_COMPILERERROR"] 	= (at, context) => 'The compiler has experienced a general failure, at ' + context.stack;
-mesg["AMCOND_NOEND"] 			= (at, context) => 'The conditional block starting at ' + at +' has no corresponding ENDIF statement';
-mesg["AMDUP_NOEND"] 			= (at, context) => 'The duplication block starting at ' + at + ' has no corresponding ENDD';
+mesg["AMCOND_NOEND"] 			= (at, context) => 'The conditional block starting at this line has no corresponding ENDIF statement';
+mesg["AMDUP_NOEND"] 			= (at, context) => 'The duplication block starting at this line has no corresponding ENDD';
 mesg["AMDUP_IMPROPERVAL"]		= (at, context) => 'Cannot duplicate "' + context.expression + '" times as it is not a parsable number'
-mesg["AMMACRO_NOEND"] 			= (at, context) => 'The macro starting at ' + at + ' has no corresponding ENDM statement';
-mesg["AMMACRO_NONAME"] 			= (at, context) => 'The macro starting at ' + at + ' has no name.';
-mesg["AMMACRO_ARGMISMATCH"] 	= (at, context) => 'Incorrect number of arguments for the macro beginning at ' + at + '. Expecting ' + context.needs + ' arguments, got ' + context.has;
-mesg["AMSYM_INVALIDVALUE"] 		= (at, context) => 'Couldn\'t parse the symbol defined at line ' + at;
+mesg["AMMACRO_NOEND"] 			= (at, context) => 'The macro starting at this line has no corresponding ENDM statement';
+mesg["AMMACRO_NONAME"] 			= (at, context) => 'The macro starting at this line has no name.';
+mesg["AMMACRO_ARGMISMATCH"] 	= (at, context) => 'Incorrect number of arguments for the macro beginning at this line. Expecting ' + context.needs + ' arguments, got ' + context.has;
+mesg["AMSYM_INVALIDVALUE"] 		= (at, context) => 'Couldn\'t parse the symbol defined at line ';
+mesg["AMSYM_LABELISNAME"]	    = (at, context) => 'Label for this symbol is a name for a register.';
 
 mesg["ASM_PE_EMPTYBODY"] 		= (at, context) => 'The conditional returned an empty body to replace'
-mesg["ASM_PE_CANTEXPANDDUP"] 	= (at, context) => 'The duplication statement at line ' + at + ' could not be processed.';
+mesg["ASM_PE_CANTEXPANDDUP"] 	= (at, context) => 'The duplication statement at this line could not be processed.';
 mesg["ASM_DEF_TOOLONG8"] 		= (at, context) => 'The DEF or DEFARR statement expects a value of size 1 byte. Truncating ' + context.value + ' to ' + context.value.slice(-2);
 mesg["ASM_DEF_TOOLONG16"] 		= (at, context) => 'The DDEF statement expects a value of size 2 bytes. Truncating ' + context.value + ' to ' + context.value.slice(-4);
 mesg["ASM_ORG_TOOLONG16"] 		= (at, context) => 'The ORG statement expects a value of size 2 bytes. Truncating ' + context.value + ' to ' + context.value.slice(-4);
@@ -270,14 +271,58 @@ assembler.parser.splitter = function(s) {
 assembler.parser.tokenize = function(string) {
 	var lines = string.split('\n');
 	var tokens = [];
+	var hangingLabel = false;
+	var hangedAt = 0;
+	var hangedLabelIs = false;
+
 	for(var i in lines) {
-		tokens[i] = [];
-		tokens[i][1] = assembler.parser.splitter(lines[i].trim());
-		tokens[i][1] = tokens[i][1].filter(n => n);
-		tokens[i][0] = i;
+		if(hangingLabel) {
+			var temp = assembler.parser.splitter(lines[i].trim())
+			temp = temp.filter(n => n);
+			var label = false;
+			if(temp.length >= 1 && temp[0].slice(-1) == ':'){		//update label
+				hangedLabelIs = temp[0];
+				temp = temp.slice(1);
+			}
+			
+			//Did not find proper line, try next line
+			if(temp.length == 0)
+				continue;
+
+			tokens[hangedAt][1].push.apply(tokens[hangedAt][1], temp);
+			tokens[hangedAt][1][0] = hangedLabelIs;
+			hangingLabel = false;		//Only one hanging label line per label
+		} else {
+			tokens[i] = [];
+			tokens[i][1] = assembler.parser.splitter(lines[i].trim());
+			tokens[i][1] = tokens[i][1].filter(n => n);
+			tokens[i][0] = i;
+
+			/* Check for hanging label
+			** Hanging label lines have same line number as label.
+			*/
+			if(tokens[i][1].length >= 1 && tokens[i][1][0].slice(-1) == ':') {
+				if(tokens[i][1].length == 1) {
+					hangingLabel = true;
+					hangedAt = i;
+					hangedLabelIs = tokens[i][1][0];
+				}
+			}
+		}
 	}
 
-	tokens = tokens.filter(n => n[1].length == 0 ? false : true);	
+	tokens = tokens.filter(n => {
+		if(n[1].length > 1){
+			return true;
+		} else if(n[1].length === 1) {
+			if(n[1][0].slice(-1) == ':')
+				return false;
+			else
+				return true;
+		} else {
+			return false;
+		}
+	});	
 	return tokens;
 }
 
@@ -1579,6 +1624,12 @@ assembler.symbol.registerSymbol = function (at, symtab) {
     }
     
     var label = line[tokens][0].slice(0,keyword == '=' ? undefined: -1);
+
+    if(assembler.parser.type(label.toUpperCase()) == 'name') {
+        assembler.stateObject.addError('AMSYM_LABELISNAME', at);
+        return false;
+    }
+
     var arg = line[tokens].slice(2).join(' ');
     console.log("Calling with" , assembler.stateObject.symbolTable.decimal, "To evaluate", arg);
     var value = assembler.parser.parseVal(arg, assembler.stateObject.symbolTable.decimal);

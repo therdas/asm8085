@@ -34,6 +34,7 @@ buttons.setup = function(e) {
 			if(buttons.mode == 'inputData'){
 				console.log('a');
 				displayCells.shiftInInputData(buttons.inputKeys[i].textContent.trim());
+				displayCells.updateHelpText(displayCells.getData());
 			} else if(buttons.mode == 'inputAddress'){
 				console.log('b');
 				displayCells.shiftInInputAddress(buttons.inputKeys[i].textContent.trim());
@@ -138,6 +139,8 @@ buttons.setup = function(e) {
 		buttons.reset();
 		displayCells.reset();
 		registers.reset();
+		displayCells.setAddress('READ');
+		displayCells.setData('Y!');
 	});
 }
 

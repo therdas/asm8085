@@ -12,6 +12,12 @@ assembler.symbol.registerSymbol = function (at, symtab) {
     }
     
     var label = line[tokens][0].slice(0,keyword == '=' ? undefined: -1);
+
+    if(assembler.parser.type(label.toUpperCase()) == 'name') {
+        assembler.stateObject.addError('AMSYM_LABELISNAME', at);
+        return false;
+    }
+
     var arg = line[tokens].slice(2).join(' ');
     console.log("Calling with" , assembler.stateObject.symbolTable.decimal, "To evaluate", arg);
     var value = assembler.parser.parseVal(arg, assembler.stateObject.symbolTable.decimal);

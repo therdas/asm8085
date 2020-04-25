@@ -112,14 +112,58 @@ assembler.parser.splitter = function(s) {
 assembler.parser.tokenize = function(string) {
 	var lines = string.split('\n');
 	var tokens = [];
+	var hangingLabel = false;
+	var hangedAt = 0;
+	var hangedLabelIs = false;
+
 	for(var i in lines) {
-		tokens[i] = [];
-		tokens[i][1] = assembler.parser.splitter(lines[i].trim());
-		tokens[i][1] = tokens[i][1].filter(n => n);
-		tokens[i][0] = i;
+		if(hangingLabel) {
+			var temp = assembler.parser.splitter(lines[i].trim())
+			temp = temp.filter(n => n);
+			var label = false;
+			if(temp.length >= 1 && temp[0].slice(-1) == ':'){		//update label
+				hangedLabelIs = temp[0];
+				temp = temp.slice(1);
+			}
+			
+			//Did not find proper line, try next line
+			if(temp.length == 0)
+				continue;
+
+			tokens[hangedAt][1].push.apply(tokens[hangedAt][1], temp);
+			tokens[hangedAt][1][0] = hangedLabelIs;
+			hangingLabel = false;		//Only one hanging label line per label
+		} else {
+			tokens[i] = [];
+			tokens[i][1] = assembler.parser.splitter(lines[i].trim());
+			tokens[i][1] = tokens[i][1].filter(n => n);
+			tokens[i][0] = i;
+
+			/* Check for hanging label
+			** Hanging label lines have same line number as label.
+			*/
+			if(tokens[i][1].length >= 1 && tokens[i][1][0].slice(-1) == ':') {
+				if(tokens[i][1].length == 1) {
+					hangingLabel = true;
+					hangedAt = i;
+					hangedLabelIs = tokens[i][1][0];
+				}
+			}
+		}
 	}
 
-	tokens = tokens.filter(n => n[1].length == 0 ? false : true);	
+	tokens = tokens.filter(n => {
+		if(n[1].length > 1){
+			return true;
+		} else if(n[1].length === 1) {
+			if(n[1][0].slice(-1) == ':')
+				return false;
+			else
+				return true;
+		} else {
+			return false;
+		}
+	});	
 	return tokens;
 }
 

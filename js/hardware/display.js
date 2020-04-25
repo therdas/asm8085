@@ -132,8 +132,13 @@ displayCells.setAddress = function (data) {
 	}
 }
 
-displayCells.updateHelpText = function () {
-	var str = displayCells.getData();
+displayCells.updateHelpText = function (data) {
+	var str;
+	if(data == undefined)
+		str = displayCells.getData();
+	else
+		str = data;
+
 	var addr = counter.incrementHex(displayCells.getAddress());
 	var code = Microcodes["" + str];							//DO NOT TOUCH OTHER THAN
 																//PLAIN ACCESS, JS makes reference
