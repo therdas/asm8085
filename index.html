@@ -151,5 +151,13 @@
 	<!-- Requires one or more of L4 requires -->
 	<script type="text/javascript" src="js/runner/loader.js"></script>
 	<script type="text/javascript" src="js/runner/runner.js"></script>
+
+	<!-- Allow RST1 and RST5 and RST7 to halt program as in kit -->
+	<script type="text/javascript">
+		memory.writeAt('0008', 'C9');
+		memory.writeAt('0028', 'C9');
+		memory.writeAt('0038', 'C9');
+		console.log("Fixed RSTs");
+	</script>
 </body>
 </html>

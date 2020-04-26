@@ -44,7 +44,7 @@ window.addEventListener('load', (e) => {
 	if(url.indexOf('?code=') == -1) {
 		return;
 	}
-
+	
 	var start = url.indexOf('?code=') + 6;
 	var obj = JSON.parse(decodeURIComponent(url.slice(start)));
 	loader.load(obj);

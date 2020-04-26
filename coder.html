@@ -16,6 +16,7 @@
 
 
 	<script src="js/codemirror/lib/codemirror.js"></script>
+	<script src="js/editor/codeflask.js"></script>
 	<link rel="stylesheet" href="js/codemirror/lib/codemirror.css">
 	<script src="js/codemirror/mode/javascript/javascript.js"></script>
 	<script type="text/javascript" src="js/codemirror/addon/mode/simple.js"></script>
@@ -33,10 +34,11 @@
 		<i class="material-icons-outlined md-24" id="new-file--button">note_add</i>
 		<i class="material-icons-outlined md-24" id="open-file--button">open_in_browser</i>
 		<i class="material-icons-outlined md-24" id="save-file--button">save_alt</i>
-		<span class="divider"></span>
+		<i class="material-icons-outlined md-24" id="share-file--button">share</i>
+		<span class="divider nomob"></span>
 		<i class="material-icons-outlined md-24" id="undo--button">undo</i>
 		<i class="material-icons-outlined md-24 disabled" id="redo--button">redo</i>
-		<span class="divider"></span>
+		<span class="divider nomob"></span>
 		<i class="material-icons-outlined md-24" id="search--button">search</i>
 		<i class="material-icons-outlined md-24" id="goto--button">my_location</i>
 		<span class="divider"></span>
@@ -44,7 +46,7 @@
 		<i class="material-icons-outlined md-24 disabled" id="listing--button">list_alt</i>
 		<i class="material-icons-outlined md-24 disabled" id="emulate--button">fast_forward</i>
 		<i class="material-icons-outlined md-24" id="insert-breakpoint--button">fiber_manual_record</i>
-		<span class="divider"></span>
+		<span class="divider nomob"></span>
 		<i class="material-icons-outlined md-24" id="indent-now--button">format_indent_increase</i>
 		<i id="autoindent-enable--button" class=""> 
 			<b class="material-icons-outlined md-24">format_indent_increase</b>
@@ -123,6 +125,7 @@
 	</div>
 
 	<textarea id="code-editor"></textarea>
+	<div id="mobile-code-editor"></div>
 	<div id="tabber">
 		<div id="tabber-tabs" class="disable-selection">
 			<span id="tabber-tabs--logs" class="tabber-tabs--tab active" onclick="tabberShowPanel('logs')">

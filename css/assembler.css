@@ -60,7 +60,6 @@ html, body {
 	transition: all 0.1s ease-in-out; 
 	cursor: default;
 	color: rgba(0,253,214,1) !important;
-	height
 }
 
 #toolbar i:hover {
@@ -752,6 +751,7 @@ th.disabled, td.disabled {
 	display: none;
 }
 
+
 @media all and (max-width: 910px) {
 	.mob {
 		display: inline-block;
@@ -763,17 +763,64 @@ th.disabled, td.disabled {
 
 	#toolbar {
 		flex-wrap: wrap;
-		height: 6em;
-
 		justify-content: space-between;
+		height: auto !important;
 	}
 
-	#toolbar i {
-		height: 2em;
+	#toolbar > i {
+		height: 2em !important;
 	}
 
 	.CodeMirror {
+		display: none;
 		height: calc(55vh - 3em) !important;		
+	}
+
+	/*Code Flask*/
+	#mobile-code-editor, .codeflask, .codeflask__textarea {
+		height: calc(55vh - 3em) !important; 
+		font-size: 1em !important;
+		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+	}
+
+	.codeflask__textarea, text-area, pre{
+		font-size: 1.1em !important;
+		line-height: 1.6em; 
+		overflow:scroll;
+		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+	}
+	textarea{
+		color:rgba(0,0,0,0) !important;
+	}
+	.codeflask__pre.codeflask__flatten{
+		width: auto !important;
+	}
+
+	/*CodeFlask styling*/
+
+
+
+	/*.codeflask__textarea, textarea, pre {
+		overflow:scroll;
+	}
+
+	textarea {
+		color:rgba(0,0,0,0) !important;
+	}
+
+	.codeflask__pre.codeflask__flatten, .codeflask__lines{
+		width: auto !important;
+	}
+	*/
+	.codeflask.codeflask--has-line-numbers:before{background-color:rgba(0,0,0,0.1) !important;}.codeflask {  background: rgba(0,7,5,0.87);  color: #bbbbbb;}.token.punctuation {  color: #a1a1a1;}.codeflask .token.keywords {  color: #9dc8a0;}.token.operator {  color: #bcbcbc;}.token.string {  color: #d7504f;}.token.comment {  color: #777777;}.token.function {  color: #037d9e;}.token.boolean {  color: #b059ff;}.token.number {  color: #5f9aa3;}.token.selector {  color: #b059ff;}.token.property {  color: #b059ff;}.token.tag {  color: #b059ff;}.token.attr-value {  color: #b059ff;}
+
+
+	#undo--button, #redo--button, #search--button, #goto--button, #indent-now--button, #autoindent-enable--button {
+		display: none !important;
+	}
+
+	.nomob {
+		display: none !important;
 	}
 
 	#tabber {
@@ -824,7 +871,7 @@ th.disabled, td.disabled {
 }
 
 @media all and (max-height: 500px) {
-	.CodeMirror {
+	.CodeMirror, #mobile-code-editor, .codeflask {
 		height: calc(97vh - 3em) !important;		
 	}
 

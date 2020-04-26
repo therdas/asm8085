@@ -5,6 +5,7 @@ var undos = 0;
 var revertCopy = '';
 
 var finalCode = false;
+var usingFlask = false;
 
 var saveSettings = {
 	dups: document.querySelector('#save-file--unroll-dup'),
@@ -26,7 +27,7 @@ var target = document.querySelector('#code-editor');
 
 CodeMirror.defineSimpleMode("asm8085", {
 	start: [
-		{regex: /\b(ORG|EQU|IF|ELIF|ELSE|ENDIF|=|DUP|DEF|DEFARR|DDEF|org|equ|if|elif|else|endif|=|dup|def|defarr|ddef|LXI|STAX|INX|INR|DCR|MVI|RAL|DAD|RIM|SHLD|DAA|SIM|STA|STC|MOV|HLT|ADD|ADC|SUB|SBB|ACI|ADI|ANA|ANI|CALL|CC|CM|CMA|CMC|CMP|CNC|CNZ|CP|CPE|CPI|CPO|CZ|DCX|DI|EI|IN|JC|JM|JMP|JNC|JNZ|JP|JPE|JPO|JZ|LDA|LDAX|LHLD|NOP|ORA|ORI|OUT|PCHL|POP|PUSH|RAR|RC|RET|RLC|RM|RNC|RNZ|RP|RPE|RPO|RRC|RST|RZ|SBI|SPHL|SUI|XCHG|XRA|XRI|XTHL|lxi|stax|inx|inr|dcr|mvi|ral|dad|rim|shld|daa|sim|sta|stc|mov|hlt|add|adc|sub|sbb|aci|adi|ana|ani|call|cc|cm|cma|cmc|cmp|cnc|cnz|cp|cpe|cpi|cpo|cz|dcx|di|ei|in|jc|jm|jmp|jnc|jnz|jp|jpe|jpo|jz|lda|ldax|lhld|nop|ora|ori|out|pchl|pop|push|rar|rc|ret|rlc|rm|rnc|rnz|rp|rpe|rpo|rrc|rst|rz|sbi|sphl|sui|xchg|xra|xri|xthl)\b/, token:"keyword"},
+		{regex: /\b(ORG|EQU|IF|ELIF|ELSE|ENDIF|=|DUP|DEF|DEFARR|DDEF|BRK|brk|org|equ|if|elif|else|endif|=|dup|def|defarr|ddef|LXI|STAX|INX|INR|DCR|MVI|RAL|DAD|RIM|SHLD|DAA|SIM|STA|STC|MOV|HLT|ADD|ADC|SUB|SBB|ACI|ADI|ANA|ANI|CALL|CC|CM|CMA|CMC|CMP|CNC|CNZ|CP|CPE|CPI|CPO|CZ|DCX|DI|EI|IN|JC|JM|JMP|JNC|JNZ|JP|JPE|JPO|JZ|LDA|LDAX|LHLD|NOP|ORA|ORI|OUT|PCHL|POP|PUSH|RAR|RC|RET|RLC|RM|RNC|RNZ|RP|RPE|RPO|RRC|RST|RZ|SBI|SPHL|SUI|XCHG|XRA|XRI|XTHL|lxi|stax|inx|inr|dcr|mvi|ral|dad|rim|shld|daa|sim|sta|stc|mov|hlt|add|adc|sub|sbb|aci|adi|ana|ani|call|cc|cm|cma|cmc|cmp|cnc|cnz|cp|cpe|cpi|cpo|cz|dcx|di|ei|in|jc|jm|jmp|jnc|jnz|jp|jpe|jpo|jz|lda|ldax|lhld|nop|ora|ori|out|pchl|pop|push|rar|rc|ret|rlc|rm|rnc|rnz|rp|rpe|rpo|rrc|rst|rz|sbi|sphl|sui|xchg|xra|xri|xthl)\b/, token:"keyword"},
 		{regex: /\b[0-9a-fA-F]+(H|h)?\b/, token:"number"},
 		{regex: /\b([A-Ea-eHLhlMm]|SP|sp|PSW|psw)\b/, token: "number"},
 		{regex: /\".*\"/, token: "variable"},
@@ -156,6 +157,7 @@ function readFile(event) {
 	if(event === undefined) {
 		if(isReadyForInput) {
 			editor.setValue(fileAtInput);
+			flask.updateCode(fileAtInput);
 			document.querySelector('#modal-shade').click();
 		}
 		isReadyForInput = false;
@@ -210,7 +212,12 @@ function saveFile() {
 		document.querySelector('#save-file--warn').textContent = 'File Extension must be .txt, for compatibility.';
 		return;
 	}
-	var copy = editor.doc.getValue();
+	var copy;
+	if(usingFlask)
+		copy = flask.getCode();
+	else
+		copy = editor.doc.getValue();
+
 	var settings = getPreprocessorSettings();
 	var fileSaveSettings = getSaverSettings();
 
@@ -223,9 +230,17 @@ function saveFile() {
 	});
 	compileCode(true);
 
-	var toSave = editor.doc.getValue();
+	var toSave
+	if(usingFlask)
+		toSave = flask.getCode();
+	else
+		toSave = editor.doc.getValue();
+
 	setPreprocessorSettings(settings);
-	editor.doc.setValue(copy);
+	if(usingFlask)
+		flask.updateCode(copy);
+	else
+		editor.doc.setValue(copy);
 
 	var blob = new Blob([toSave], {type: 'text/plain;charset=utf-8'});
 	saveAs(blob, name);
@@ -234,6 +249,7 @@ function saveFile() {
 
 function newFile() {
 	editor.doc.clearHistory();
+	flask.updateCode('');
 	document.querySelector('#modal-shade').click();
 	editor.setValue('');
 }
@@ -245,6 +261,11 @@ function toggleAutoIndent() {
 
 function insertBreakpoint() {
 	//https://stackoverflow.com/questions/22609868/how-to-add-new-line-programmatically-in-codemirror
+
+	if(usingFlask) {
+		flask.updateCode(flask.getCode() + '\nbrk');
+		return;
+	}
 
 	var doc = editor.getDoc();
 	var cursor = doc.getCursor(); // gets the line number in the cursor position
@@ -449,86 +470,27 @@ function setPreprocessorSettings (preprocessorSettingsObject) {
 
 function revert() {
 	editor.doc.setValue(revertCopy);
+	flask.updateCode(revertCopy);
 	document.querySelector('#preprocessor-view--doRevert').disabled = true;
 }
 
-function compileCode() {
+function compileCode(preOnly) {
 	clearLogs();
-	var onlyPreprocess = false;
-	/*var retVal = false;
-	var errorFlag = false;
- 	var preprocessorLogs = [];
+	var onlyPreprocess;
 
-	if(onlyPreprocess == undefined)
+	if(preOnly == undefined)
 		onlyPreprocess = false;
+	else
+		onlyPreprocess = preOnly;
 
-	var preSettings = getPreprocessorSettings();
-	var text = editor.doc.getValue();
-	var afterComments = preprocessor.removeComments(text);
-	try {	
-		var afterDup = preSettings.dups ? preprocessor.unrollDups(text): text;
-	} catch(err) {
-		errorFlag = true;
-		var afterDup = text;
-		preprocessorLogs.push({
-			line: err.at, type: 'fatal error',
-			body: 'Cannot find matching ENDD. All DUP statements must be followed by a ENDD'
-		})
-	}
+	if(onlyPreprocess == true)
+		return
 
-	if(errorFlag == false){
-		try {
-			var afterMacro = preSettings.macros ? preprocessor.expandMacros(afterDup, {
-																						mangleLocals: preSettings.mangle, 
-																						detectLoops: preSettings.detectLoop,
-																						maxMacroRecur: 10
-																					  }): {lines: afterDup, success: true, logs:[]};
-		} catch(err) {
-			afterMacro = {lines: text};
-			errorFlag = true;
-			preprocessorLogs.push({
-				line: err.at, type: 'fatal error',
-				body: 'Cannot find matching ENDM. All MACRO definitions must be terminted by a ENDM'
-			})
-		}
-	} else {
-		afterMacro = {lines: text};
-	}
-	afterMacro.logs = preprocessorLogs;
-	afterMacro.success = !errorFlag;
-
-	var total = {success: false, error: true, warning: true};
-
-	if(preSettings.macros && preSettings.dups) {
-		addLog((afterMacro.success?'Preprocessed with ': 'Failed preprocessing with ') + (!afterMacro.success?'':'no ')
-		+ 'errors and ' + (!afterMacro.warning?'':'no ') + 'warnings.');
-	}
-
-
-	if(!onlyPreprocess && afterMacro.success == true) {
-		total = assembler.assemble(afterMacro.lines);
-		addLog((total.success?'Assembled with ': 'Failed assembly with ') + (total.error?'':'no ')
-		+ 'errors and ' + (total.warning?'':'no ') + 'warnings.');
-
-		if(total.success == true) {
-			finalCode = {
-				list: total.listing,
-				breakpoints: total.debug.breakpoints
-			} 
-			document.querySelector('#listing--button').classList.remove('disabled');
-			document.querySelector('#emulate--button').classList.remove('disabled');
-		};
-
-		retVal = total;
-	} else if(onlyPreprocess == true) {
-		revertCopy =  editor.doc.getValue();
-		editor.doc.setValue(preSettings.macros? afterMacro.lines: (preSettings.dups? afterDup: text));
-		document.querySelector('#preprocessor-view--doRevert').disabled = false;
-	}
-
-
-*/
-	var text = editor.getValue();
+	var text;
+	if(usingFlask)
+ 		text = flask.getCode();
+ 	else
+		text = editor.getValue();
 	var stateObject = assembler.compile(text);
 
 	if(stateObject.errors.length == 0 && stateObject.warnings.length == 0)
@@ -587,21 +549,6 @@ function compileCode() {
 		document.querySelector('#listing-table').innerHTML = totalListing;
 		document.querySelector('#sidebar').classList.remove('hidden');
 	}
-
-	/*for(var i = 0; i < total.debug.listing.length; ++i) {
-		if(total.debug.listing[i] == undefined)
-			continue;
-		var str = "<tr><td>"+total.debug.listing[i].code[0].location+"</td>" +
-				  "<td>"+total.debug.listing[i].code[0].code+"</td>" +
-				  "<td style=\"border-left-color: "+colors[colorI]+"\" rowspan="+ total.debug.listing[i].code.length +">"+total.debug.listing[i].instr+"</td></tr>";
-	    colorI = (colorI + 1) % colors.length;
-	    for(var j = 1; j < total.debug.listing[i].code.length; ++j) {
-	    	var innerstr = "<tr><td>"+total.debug.listing[i].code[j].location + "</td>" +
-	    				   "<td>" + total.debug.listing[i].code[j].code + "</td></tr>"
-	    	str += innerstr;
-	    }
-	    totalListing += str;
-	}*/
 
 	/*References*/
 	var totalListing = "<tr><th>Line</th><th>Label</th><th>Assembled Address</th></tr>";
@@ -690,9 +637,54 @@ function goToRunner(code) {
 	return goto;
 }
 
-document.addEventListener('load', (e) => {
-	var viewheight = $(window).height();
-    var viewwidth = $(window).width();
-    var viewport = document.querySelector("meta[name=viewport]");
-    viewport.setAttribute("content", "height=" + viewheight + "px, width=" + viewwidth + "px, initial-scale=1.0");
-});
+
+/*Codeflask stuff*/
+var flask;
+
+window.onload = function(e) {
+
+    flask = new CodeFlask('#mobile-code-editor', {language: 'js', lineNumbers: true, defaultTheme: false});
+    console.log("Setting flask");
+    flask.addLanguage('8085asm',{
+			keywords: /\b(ORG|EQU|IF|ELIF|ELSE|ENDIF|=|DUP|DEF|DEFARR|DDEF|BRK|brk|org|equ|if|elif|else|endif|=|dup|def|defarr|ddef|LXI|STAX|INX|INR|DCR|MVI|RAL|DAD|RIM|SHLD|DAA|SIM|STA|STC|MOV|HLT|ADD|ADC|SUB|SBB|ACI|ADI|ANA|ANI|CALL|CC|CM|CMA|CMC|CMP|CNC|CNZ|CP|CPE|CPI|CPO|CZ|DCX|DI|EI|IN|JC|JM|JMP|JNC|JNZ|JP|JPE|JPO|JZ|LDA|LDAX|LHLD|NOP|ORA|ORI|OUT|PCHL|POP|PUSH|RAR|RC|RET|RLC|RM|RNC|RNZ|RP|RPE|RPO|RRC|RST|RZ|SBI|SPHL|SUI|XCHG|XRA|XRI|XTHL|lxi|stax|inx|inr|dcr|mvi|ral|dad|rim|shld|daa|sim|sta|stc|mov|hlt|add|adc|sub|sbb|aci|adi|ana|ani|call|cc|cm|cma|cmc|cmp|cnc|cnz|cp|cpe|cpi|cpo|cz|dcx|di|ei|in|jc|jm|jmp|jnc|jnz|jp|jpe|jpo|jz|lda|ldax|lhld|nop|ora|ori|out|pchl|pop|push|rar|rc|ret|rlc|rm|rnc|rnz|rp|rpe|rpo|rrc|rst|rz|sbi|sphl|sui|xchg|xra|xri|xthl)\b/,
+			function: /\b[^\s]*\:/,
+			number: /\b[0-9a-fA-F]+(H|h)?\b/,
+			operator: /[<>]=?|[!=]=?=?|--?|\+\+?|&&?|\|\|?|[?*/~^%]/,
+			string: {
+				pattern: /(["'])(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+				greedy: true
+			},
+			constant: /\b(__len_[^\s]+|[^\s]+_indLocInstNo[^\s]+)\b/,
+			comment: {
+				pattern: /\;.*/,
+				greedy: true
+			}
+		});
+	flask.updateLanguage('8085asm');
+
+
+};
+
+const mq = window.matchMedia("(max-width: 910px)");
+mq.addListener(widthChange);
+widthChange(mq);
+
+function widthChange(mq) {
+	try {
+		if(mq.matches) {
+			console.log("Mobile");
+			usingFlask = true;
+
+			//Sync document contents
+			flask.updateCode(editor.getValue());
+		} else {
+			console.log("Desktop");
+			usingFlask = false;
+			editor.setValue(flask.getCode());
+			editor.refresh();
+		}
+	} catch (err) {
+		console.log("Trying again...");
+		setTimeout(()=> {widthChange(mq);}, 500);
+	}
+}
