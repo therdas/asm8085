@@ -1036,6 +1036,7 @@
   };
 
   ParserState.prototype.accept = function (type, value) {
+    if(type === TSTRING) return false;
     if (this.nextToken.type === type && this.tokenMatches(this.nextToken, value)) {
       this.next();
       return true;

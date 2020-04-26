@@ -30,7 +30,8 @@ runner.runFrom = function (from, step) {
 	var ct = 0;															//Count number of steps
 	do {
 
-		if(breakpoints.checkIfBreakpointAt(registers.PC) == true) {
+		if(buttons.mode != 'stepThrough' && breakpoints.checkIfBreakpointAt(registers.PC) == true) {
+			console.log("Halting...");
 			halt = true;
 			buttons.setMode('stepThrough');
 		} else {

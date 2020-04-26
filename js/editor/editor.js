@@ -26,14 +26,15 @@ var target = document.querySelector('#code-editor');
 
 CodeMirror.defineSimpleMode("asm8085", {
 	start: [
-		{regex: /(?:ORG|EQU|DEFMEM|DEFMEMWS|MACRO|DUP|ENDM|ENDD|PIF|PENDIF|PELSE|BRK|brk)\b/, token:"variable"},
-		{regex: /(?:LXI|STAX|INX|INR|DCR|MVI|RAL|DAD|RIM|SHLD|DAA|SIM|STA|STC|MOV|HLT|ADD|ADC|SUB|SBB|ACI|ADI|ANA|ANI|CALL|CC|CM|CMA|CMC|CMP|CNC|CNZ|CP|CPE|CPI|CPO|CZ|DCX|DI|EI|IN|JC|JM|JMP|JNC|JNZ|JP|JPE|JPO|JZ|LDA|LDAX|LHLD|NOP|ORA|ORI|OUT|PCHL|POP|PUSH|RAR|RC|RET|RLC|RM|RNC|RNZ|RP|RPE|RPO|RRC|RST|RZ|SBI|SPHL|SUI|XCHG|XRA|XRI|XTHL)\b/, token:"keyword"},
-		{regex: /\b[0-9A-F]+H\b/, token:"number"},
-		{regex: /\b[A-EH-LM]|SP\b/, token: "number"},
-		{regex: /\b[0-9A-F]+\b/, token:"number"},
+		{regex: /\b(ORG|EQU|IF|ELIF|ELSE|ENDIF|=|DUP|DEF|DEFARR|DDEF|org|equ|if|elif|else|endif|=|dup|def|defarr|ddef|LXI|STAX|INX|INR|DCR|MVI|RAL|DAD|RIM|SHLD|DAA|SIM|STA|STC|MOV|HLT|ADD|ADC|SUB|SBB|ACI|ADI|ANA|ANI|CALL|CC|CM|CMA|CMC|CMP|CNC|CNZ|CP|CPE|CPI|CPO|CZ|DCX|DI|EI|IN|JC|JM|JMP|JNC|JNZ|JP|JPE|JPO|JZ|LDA|LDAX|LHLD|NOP|ORA|ORI|OUT|PCHL|POP|PUSH|RAR|RC|RET|RLC|RM|RNC|RNZ|RP|RPE|RPO|RRC|RST|RZ|SBI|SPHL|SUI|XCHG|XRA|XRI|XTHL|lxi|stax|inx|inr|dcr|mvi|ral|dad|rim|shld|daa|sim|sta|stc|mov|hlt|add|adc|sub|sbb|aci|adi|ana|ani|call|cc|cm|cma|cmc|cmp|cnc|cnz|cp|cpe|cpi|cpo|cz|dcx|di|ei|in|jc|jm|jmp|jnc|jnz|jp|jpe|jpo|jz|lda|ldax|lhld|nop|ora|ori|out|pchl|pop|push|rar|rc|ret|rlc|rm|rnc|rnz|rp|rpe|rpo|rrc|rst|rz|sbi|sphl|sui|xchg|xra|xri|xthl)\b/, token:"keyword"},
+		{regex: /\b[0-9a-fA-F]+(H|h)?\b/, token:"number"},
+		{regex: /\b([A-Ea-eHLhlMm]|SP|sp|PSW|psw)\b/, token: "number"},
+		{regex: /\".*\"/, token: "variable"},
+		{regex: /\'.*\'/, token: "variable"},
+		{regex: /\#[^ ]*\b/, token: "number"},
 		{regex: /\b\w+\b/, token:"normal"},
-		{regex: /[\s\S]*:/, token:"string", dedent:true},
-		{regex: /;[\s\S]*/, token: "comment"}
+		{regex: /[\S\s]*\:/, token:"string", dedent:true},
+		{regex: /\;[\s\S]*/, token: "comment"}
 	],
 	meta: {
 		lineComment: ";",
@@ -164,9 +165,9 @@ function readFile(event) {
 		var file = event.target.files[0];
 		var ext = file.name.split('.').slice(-1)[0];
 
-		if(!['txt', 'asm', 'test', 'a85'].includes(ext)){
+		if(!['txt'].includes(ext)){
 			file = undefined;
-			document.querySelector('#open-file--warn').textContent = "Invalid file extension! Choose a file with .txt or .a85 extension."
+			document.querySelector('#open-file--warn').textContent = "Invalid file extension! Choose a file with .txt extension."
 			document.querySelector('#open-file--submit-button').disabled = true;
 			isReadyForInput = false;
 			return;
@@ -205,8 +206,8 @@ function saveFile() {
 	var name = document.querySelector('#save-file--filename').value;
 	var ext = name.split('.').slice(-1)[0];
 
-	if(!['a85', 'asm', 'test'].includes(ext)) {
-		document.querySelector('#save-file--warn').textContent = 'File Extension must be .a85.';
+	if(!['txt'].includes(ext)) {
+		document.querySelector('#save-file--warn').textContent = 'File Extension must be .txt, for compatibility.';
 		return;
 	}
 	var copy = editor.doc.getValue();
@@ -228,7 +229,6 @@ function saveFile() {
 
 	var blob = new Blob([toSave], {type: 'text/plain;charset=utf-8'});
 	saveAs(blob, name);
-	document.querySelector('title').textContent = name + '| a85 8085 macro assembler';
 	document.querySelector('#modal-shade').click();
 }
 
@@ -452,10 +452,10 @@ function revert() {
 	document.querySelector('#preprocessor-view--doRevert').disabled = true;
 }
 
-function compileCode(onlyPreprocess) {
+function compileCode() {
 	clearLogs();
-
-	var retVal = false;
+	var onlyPreprocess = false;
+	/*var retVal = false;
 	var errorFlag = false;
  	var preprocessorLogs = [];
 
@@ -526,110 +526,115 @@ function compileCode(onlyPreprocess) {
 		document.querySelector('#preprocessor-view--doRevert').disabled = false;
 	}
 
-	/*Logs for preprocessor*/
-	if(afterMacro.hasOwnProperty('logs') && afterMacro.logs.length > 0) {
-		for(var i = 0; i < afterMacro.logs.length; ++i){
-			if(afterMacro.logs[i].type == 'warning') {
-				addWarning(afterMacro.logs[i].body, afterMacro.logs[i].line);
-			} else if(afterMacro.logs[i].type == 'fatal error') {
-				addError(afterMacro.logs[i].body, afterMacro.logs[i].line);
-			} else if(afterMacro.logs[i].type == 'log') {
-				addLog(afterMacro.logs[i].body, afterMacro.logs[i].line);
-			}
-		}
+
+*/
+	var text = editor.getValue();
+	var stateObject = assembler.compile(text);
+
+	if(stateObject.errors.length == 0 && stateObject.warnings.length == 0)
+		addLog('Finished assembly without any errors or warnings.');
+	else if(stateObject.errors.length == 0 && stateObject.warnings.length != 0)
+		addLog('Finished assembly, but with ' + stateObject.warnings.length + ' warning(s).');
+	else if(stateObject.errors.length != 0)
+		addLog('Could not assemble due to ' + stateObject.errors.length + ' error(s) and ' + stateObject.warnings.length + ' warning(s).');
+
+	for(var i in stateObject.errors) {
+		addError(mesg[stateObject.errors[i].body](stateObject.errors[i].at, stateObject.errors[i].context), stateObject.errors[i].at);
 	}
 
-	if(afterMacro.hasOwnProperty('success') && afterMacro.success == false) {
-		addWarning('Compilation halted due to preprocessor errors.');
-		return;
+	for(var i in stateObject.warnings) {
+		addWarning(mesg[stateObject.warnings[i].body](stateObject.warnings[i].at, stateObject.warnings[i].context), stateObject.warnings[i].at);
 	}
 
-	if(afterMacro.logs.length > 0) {
-		for(var i = 0; i < total.logs.length; ++i) {
-			if(total.logs[i].type == 'warning') {
-				addWarning(total.logs[i].body, total.logs[i].line);
-			} else if(total.logs[i].type == 'fatal error') {
-				addError(total.logs[i].body, total.logs[i].line);
-			} else if(total.logs[i].type == 'log') {
-				addLog(total.logs[i].body, total.logs[i].line);
-			}
-		}
+
+	if(stateObject.errors.length == 0) {
+		finalCode = {
+			list: stateObject.listing,
+			breakpoints: stateObject.breakPointTable
+		};
 	}
 
-	if(!onlyPreprocess){
-		if(total.logs.length > 0) {
-			for(var i = 0; i < total.logs.length; ++i) {
-				if(total.logs[i].type == 'warning') {
-					addWarning(total.logs[i].body, total.logs[i].line);
-				} else if(total.logs[i].type == 'fatal error') {
-					addError(total.logs[i].body, total.logs[i].line);
-				} else if(total.logs[i].type == 'log') {
-					addLog(total.logs[i].body, total.logs[i].line);
-				}
-			}
-		}
+	var cwlisting = stateObject.cwlisting;
+	var listing = stateObject.listing;
+	var seenAddresses = [];
 
-		var colors = ["rgba(255,0,0,0.25)","rgba(0,255,0,0.25)","rgba(0,0,255,0.25)","rgba(255,255,0,0.25)","rgba(0,255,255,0.25)","rgba(255,0,255,0.25)"];
+	if(stateObject.errors.length == 0) {
+		var colors = ["#0DA1FE","#0BCBE6","#00FCD7","#0BE687","#0DFE51","#FC990D"];
 		var colorI = 0;
 		var totalListing = "<tr><th>Address</th><th>Data</th><th>Instruction</th></tr>";
-		for(var i = 0; i < total.debug.listing.length; ++i) {
-			if(total.debug.listing[i] == undefined)
-				continue;
-			var str = "<tr><td>"+total.debug.listing[i].code[0].location+"</td>" +
-					  "<td>"+total.debug.listing[i].code[0].code+"</td>" +
-					  "<td style=\"border-left-color: "+colors[colorI]+"\" rowspan="+ total.debug.listing[i].code.length +">"+total.debug.listing[i].instr+"</td></tr>";
-		    colorI = (colorI + 1) % colors.length;
-		    for(var j = 1; j < total.debug.listing[i].code.length; ++j) {
-		    	var innerstr = "<tr><td>"+total.debug.listing[i].code[j].location + "</td>" +
-		    				   "<td>" + total.debug.listing[i].code[j].code + "</td></tr>"
-		    	str += innerstr;
-		    }
-		    totalListing += str;
+		for(var i in cwlisting) {
+			var str = "<tr><td rowspan=" + Object.keys(cwlisting[i].codes).length +
+			" style=\"border-right-color: " + colors[colorI] +
+			"; border-right-width: 2px; border-right-style: solid;\">" + cwlisting[i].line + "</td>";
+			var first = true;
+			for(var j in cwlisting[i].codes) {
+				if(first) {
+					first = !first; 
+				} else {
+					str += '<tr>';
+				}
+				str += '<td>' + j + '</td><td>' + cwlisting[i].codes[j] + '</td></tr>';
+				seenAddresses.push(j);
+			}
+			totalListing += str;
+			colorI = (colorI + 1) % colors.length;
+		}
+		for(var i in listing) {
+			if(!(seenAddresses.includes(i))) {
+				totalListing += '<tr><td>By <code>def<code>,<code>ddef<code> or <code>defarr<code></td><td>'+i+'</td><td>'+listing[i]+"</td></tr>";
+			}
 		}
 		document.querySelector('#listing-table').innerHTML = totalListing;
-
-		/*References*/
-		var totalListing = "<tr><th>Line</th><th>Label</th><th>Assembled Address</th></tr>";
-		for(var label in total.debug.references) {
-			var str = "<tr><td>"+total.debug.referencesLines[total.debug.references[label]]+"</td>";
-			str += "<td>"+label+"</td><td>"+total.debug.references[label]+"</td></tr>";
-			totalListing += str;
-		}
-
-		document.querySelector('#references-listing').innerHTML = totalListing;
-
-		/*Forward References*/
-		var totalListing = "<tr><th>Line(s)</th><th>Label</th><th>Found</th><th>Resolved at</th></tr>";
-		for(var label in total.debug.forwardReferencesListing) {
-			var str = "<tr><td>"+total.debug.forwardReferencesListing[label].at.join(", ")+"</td>";
-			str += "<td>"+label+"</td>";
-			str += "<td>"+(total.debug.forwardReferencesListing[label].foundAt === false ? "🗙":"✅")+"</td>";
-			str += "<td>"+(total.debug.forwardReferencesListing[label].foundAt === false ? "-":total.debug.forwardReferencesListing[label].foundAt)+"</td></tr>";
-			totalListing += str;
-		}
-		document.querySelector('#forward-references-listing').innerHTML = totalListing;
-
-		/*Symbol Table*/
-		var totalListing = "<tr><th>Symbol</th><th>Value</th><th>Replaced in lines</th></tr>";
-		for(var symbol in total.debug.symbolTable) {
-			var str = "<tr><td>"+symbol+"</td>";
-			str += "<td>"+total.debug.symbolTable[symbol]+"</td>";
-			str += "<td>"+(total.debug.equReplaces.hasOwnProperty(symbol) ? total.debug.equReplaces[symbol].join(", "): "-");
-			str += "</td></tr>";
-			totalListing += str;
-		}
-		document.querySelector('#symbol-table').innerHTML = totalListing;
-
-		/*Breakpoint table*/
-		var totalListing = '<tr><th>Breakpoint at address</th><th class="disabled">After Instruction</th></tr>';
-		for(var line in total.debug.breakpoints) {
-			var str = '<tr><td>' + total.debug.breakpoints[line] + '</td><td class="disabled"></td>';
-			totalListing += str;
-		}
-		document.querySelector('#breakpts-table').innerHTML = totalListing;
+		document.querySelector('#sidebar').classList.remove('hidden');
 	}
 
-	return retVal;
+	/*for(var i = 0; i < total.debug.listing.length; ++i) {
+		if(total.debug.listing[i] == undefined)
+			continue;
+		var str = "<tr><td>"+total.debug.listing[i].code[0].location+"</td>" +
+				  "<td>"+total.debug.listing[i].code[0].code+"</td>" +
+				  "<td style=\"border-left-color: "+colors[colorI]+"\" rowspan="+ total.debug.listing[i].code.length +">"+total.debug.listing[i].instr+"</td></tr>";
+	    colorI = (colorI + 1) % colors.length;
+	    for(var j = 1; j < total.debug.listing[i].code.length; ++j) {
+	    	var innerstr = "<tr><td>"+total.debug.listing[i].code[j].location + "</td>" +
+	    				   "<td>" + total.debug.listing[i].code[j].code + "</td></tr>"
+	    	str += innerstr;
+	    }
+	    totalListing += str;
+	}*/
+
+	/*References*/
+	var totalListing = "<tr><th>Line</th><th>Label</th><th>Assembled Address</th></tr>";
+	for(var label in stateObject.referenceTable) {
+		var str = "<tr><td>"+stateObject.referenceTable[label]+"</td>";
+		str += "<td>"+label+"</td><td>"+stateObject.codePointTable[stateObject.referenceTable[label]]+"</td></tr>";
+		totalListing += str;
+	}
+
+	document.querySelector('#references-listing').innerHTML = totalListing;
+
+	/*Symbol Table*/
+	var totalListing = "<tr><th>Symbol</th><th>Value</th></tr>";
+	for(var symbol in stateObject.symbolTable.hexadecimal) {
+		var str = "<tr><td>"+symbol+"</td>";
+		str += "<td>"+stateObject.symbolTable.hexadecimal[symbol]+"</td></tr>";
+		totalListing += str;
+	}
+	document.querySelector('#symbol-table').innerHTML = totalListing;
+
+	/*Breakpoint table*/
+	var totalListing = '<tr><th>Breakpoint at address</th><th class="disabled">After Instruction</th></tr>';
+	for(var hex in stateObject.breakPointTable) {
+		var str = '<tr><td>' + stateObject.breakPointTable[hex] + '</td><td class="disabled"></td>';
+		totalListing += str;
+	}
+	document.querySelector('#breakpts-table').innerHTML = totalListing;
+
+	stateObject.errors.length == 0 ? document.querySelector('#listing--button').classList.remove('disabled') : false;
+	stateObject.errors.length == 0 ? document.querySelector('#emulate--button').classList.remove('disabled') : false;
+
+	return stateObject.errors.length == 0;
+
 }
 
 document.querySelector('#preprocessor-view--doPreprocess').addEventListener('click', (e) => compileCode(true));

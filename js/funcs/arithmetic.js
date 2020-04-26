@@ -71,6 +71,7 @@ dict['SUB'] = function(instr) {
 	subtrahend = conversion.onesComplement(subtrahend);
 
 	var result = adder.adder(minuend, subtrahend, '1');
+    console.log("::", result);
 
 	registers.setRegister('A', result.sum);
 	registers.setFlag('CY', result.flags.carry == '0' ? '1' : '0');

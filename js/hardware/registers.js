@@ -14,7 +14,7 @@ var registers = {
 	IR: '00',								//Internal registers DO NOT USE unless you are writing a runner.
 	Z: '00',
 	W: '00',
-	isRegister: /^[A-EH-LWZ]$/,
+	isRegister: /^[A-EH-LWZF]$/,
 	isRegisterPair: /^B|D|H|PSW|SP|PC|WZ$/,
 	options: {
 		startAt: 'F500'

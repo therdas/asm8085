@@ -25,6 +25,12 @@ memory.readFrom = function (addr) {
 	return memory._pad(num.toString(16), 2).toUpperCase();
 }
 
+//Function to read from raw memory address
+memory.rawRead = function (addr) {
+	var num = memory.data[addr];
+	return memory._pad(num.toString(16), 2).toUpperCase();
+}
+
 //Function to write at address a byte (as hex string).
 memory.writeAt = function (addr, data) {
 	console.log("WRITTEN ", data, " AT ", addr);
@@ -39,6 +45,18 @@ memory._pad = function (n, width, z) {
   z = z || '0';
   n = n + '';
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+memory.constructMinAssocArr = function(ignore) {
+	if(ignore == undefined)
+		ignore = '00';
+	var obj = {};
+	for(var i = 0; i < memory.length; ++i) {
+		var data = memory.rawRead(i);
+		if(data != '00')
+			obj[memory._pad(i.toString(16), 4).toUpperCase()] = data;
+	}
+	return obj;
 }
 
 var breakpoints = {}

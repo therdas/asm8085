@@ -1,16 +1,16 @@
 /* Rules for sizing the icon. */
-.material-icons.md-18 { font-size: 18px; }
-.material-icons.md-24 { font-size: 24px; }
-.material-icons.md-30 { font-size: 30px; }
-.material-icons.md-48 { font-size: 48px; }
+.material-icons-outlined.md-18 { font-size: 18px; }
+.material-icons-outlined.md-24 { font-size: 24px; }
+.material-icons-outlined.md-30 { font-size: 30px; }
+.material-icons-outlined.md-48 { font-size: 48px; }
 
 /* Rules for using icons as black on a light background. */
-.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
-.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+.material-icons-outlined.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons-outlined.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
 
 /* Rules for using icons as white on a dark background. */
-.material-icons.md-light { color: rgba(255, 255, 255, 1); }
-.material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+.material-icons-outlined.md-light { color: rgba(255, 255, 255, 1); }
+.material-icons-outlined.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
 
 .disable-selection {
 	-webkit-touch-callout: none; /* iOS Safari */
@@ -38,17 +38,17 @@ html, body {
 
 #toolbar {
 	height: 3em;
-	background-color: rgba(0,0,0,0.85);
 	position: relative;
+	background-color: rgb(0,7,5,0.87);
 	padding-left: 0.5em;
 	box-sizing: border-box;
 	overflow-y: hidden;
 	z-index: 10;
-	box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 	cursor: default;
 	display: flex;
 	flex-direction: row;
 	width: 100%;
+	box-shadow: 0 4px 4px #202725;
 }
 
 #toolbar i {
@@ -59,6 +59,7 @@ html, body {
 	position: relative;
 	transition: all 0.1s ease-in-out; 
 	cursor: default;
+	color: rgba(0,253,214,1) !important;
 	height
 }
 
@@ -105,7 +106,7 @@ html, body {
 #more-menu {
 	display: block;
 	position: absolute;
-	background-color: #232323;
+	background-color: #232725;
 	z-index: 100;
 	right: 0.3em;
 	margin-top: -2.2em;
@@ -155,7 +156,7 @@ html, body {
 	display: block;
 	height: 35vh;
 	width: 100%;
-	background-color: rgba(0,0,0,0.85);
+	background-color: rgb(0,10,7,0.92);
 	z-index: 5;
 	position: relative;
 	box-shadow: 0 -2px 4px rgba(0,0,0,0.15);
@@ -170,8 +171,8 @@ html, body {
 	z-index: 100;
 	padding-bottom: 5em;
 	min-width: 30em;
-	background-color: #292929;
-	border-radius: 5px;
+	background-color: #202725;
+	border-radius: 15px;
 	box-shadow: 0 10px 15px rgba(0,0,0,0.5), 0 0 25px rgba(0,0,0,0.2);
 	transition: opacity 0.1s ease-in-out;
 	opacity: 1;
@@ -202,6 +203,7 @@ html, body {
 	font-family: 'Roboto', sans-serif;
 	display: block;
 	padding: 0 1em;
+
 }
 
 .modal > input[type=file]::-webkit-file-upload-button {
@@ -210,8 +212,8 @@ html, body {
   padding: 0.7em 1em;
   border-radius: 2px;
   margin-right: 1em;
-  color: rgba(255,255,255,0.9);
-  background-color: #3A3A3A;
+  color: rgba(0,0,0,0.9);
+  background-color: rgb(0,253,214);
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
   transition: all 0.1s ease-in-out;
 }
@@ -220,20 +222,20 @@ html, body {
   outline: none;
   border: none;
   padding: 0.7em 1em;
-  border-radius: 2px;
+  border-radius: 4px;
   margin-right: 1em;
-  color: rgba(255,255,255,0.9);
-  background-color: #3A3A3A;
+  color: rgba(0,0,0,0.9);
+  background-color: rgb(0,253,214);
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .modal > input[type=file]::-webkit-file-upload-button:hover {
-   background-color: #313131;
+   background-color: rgb(0,213,174);
    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
 }
 
 .modal > input[type=file]::-webkit-file-upload-button:active  {
-   background-color: #2A2A2A;
+   background-color: rgba(0,213,174,0.7);
    transition: none;
 }
 
@@ -284,6 +286,8 @@ html, body {
 
 .modal button:first-child {
 	margin-left: auto;
+	background-color: transparent;
+
 }
 
 .modal button {
@@ -293,11 +297,12 @@ html, body {
 	font-size: 1em;
 	font-family: 'Roboto', sans-serif;
   padding: 0.7em 1em;
-  border-radius: 2px;
+  border-radius: 4px;
   color: rgba(255,255,255,0.9);
   background:none;
   text-decoration: underline;
   transition: all 0.1s ease-in-out;
+  background-color: rgb(0,253,214);
 }
 
 .modal button:disabled{
@@ -310,22 +315,26 @@ html, body {
 	font-size: 1em;
 	font-family: 'Roboto', sans-serif;
   padding: 0.7em 1em;
-  border-radius: 2px;
+  border-radius: 4px;
   text-decoration: none;
 
-  color: rgba(255,255,255,0.9);
-  background-color: #3A3A3A;
+  color: rgba(0,0,0,0.9);
+  background-color: rgb(0,253,214);
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
   transition: all 0.1s ease-in-out;
 }
 
 .modal button:hover {
-   background-color: #313131;
+   background-color: rgb(0,213,174);
    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+   color: rgba(0,0,0,0.8);
+   text-decoration: none;
 }
 
 .modal button:active  {
-   background-color: #2A2A2A;
+   background-color: rgba(0,213,174,0.7);
+   color: rgba(0,0,0,0.8);
+   text-decoration: none;
    transition: none;
 }
 
@@ -373,14 +382,14 @@ html, body {
 	display: block;
 	cursor: default;
 	height: 2.2em;
-	background-color: rgba(0,0,0,0.25);
+	background-color: rgba(0,7,5,0.4);
 	position: fixed;
 	width: 100%;
 	z-index: 5;
 }
 
 .tabs {
-	background-color: #202020;
+	background-color: rgba(0,7,5,0.4);
 }
 
 .view {
@@ -410,7 +419,8 @@ html, body {
 }
 
 .tabber-tabs--tab.active, .tabs > .tab.active {
-	border-bottom: solid 3px rgba(255,255,255,0.7);
+	border-bottom: solid 3px rgba(0,253,214,1);
+	color: rgba(0,253,214,0.7);
 }
 
 .tabber-tabs--tab:hover, .tabs > .tab:hover {
@@ -510,7 +520,7 @@ html, body {
 	display: block;
 	position: absolute;
 	top: -0.65em;
-	background-color: #262626;
+	background-color: #132015;
 	padding: 0 0.5em;
 }
 
@@ -565,7 +575,8 @@ html, body {
 .tabber-view--top-banner {
 	display: block;
 	padding: 0.75em 1em;
-	background-color: #202020;
+	background-color: rgba(0,153,114,1);
+	color: rgba(0,0,0,0.8);
 	box-shadow: 0 2px 2px rgba(0,0,0,0.4);
 	position: fixed;
 	z-index: 50;
@@ -574,6 +585,7 @@ html, body {
 }
 
 .tabber-view--top-banner-compensator {
+	content: ' ';
 	display: block;
 	padding: 0.75em 1em;
 	margin-bottom: 1.5em;
@@ -593,19 +605,19 @@ html, body {
     display: inline-block;
     outline: none;
     transition-duration: 0.3s;
-    background-color: #404040;
+    background-color: rgba(0,253,214,1);
     cursor: pointer;
     border-radius: 50%;
 }
 
 .tabber-view--top-banner > input:checked {
-    background-color: #505050;
+    background-color: rgba(0,253,214,1);
 }
 
 
 .tabber-view--top-banner > input:checked::before {
     content: '\2713';
-    color: white;
+    color: rgba(0,0,0,0.8);
     margin-left: 0.08em;
     margin-top: -0.2em;
     display: inline-block;
@@ -613,7 +625,7 @@ html, body {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 2px;
 }
 
 ::-webkit-scrollbar-track {
@@ -635,7 +647,7 @@ html, body {
 	top: 0;
 	bottom: 0;
 	width: 20em;
-	background-color: #252525;
+	background-color: #202725;
 	box-shadow: -3px 0 3px rgba(0,0,0,0.15);
 	z-index: 15;
 	overflow-y: scroll;
@@ -649,7 +661,7 @@ html, body {
 .sidebar> span#label {
 	display: block;
 	width: 20em;
-	background-color: #222;
+	background-color: #202725;
 	padding: 0.9em;
 	height: 3em;
 	box-sizing: border-box;
@@ -702,14 +714,6 @@ body.minned {
 	margin: 0;
 }
 
-#sidebar > table > tbody > tr > td:nth-child(even) {
-	background-color: rgba(0,0,0,0.1);
-}
-
-#sidebar > table > tbody > tr > td:nth-child(3) {
-	border-left: 2px solid rgba(255,255,255,0.04);
-}
-
 table {
 	border-spacing: 0;
 	//display: inline-block;
@@ -725,10 +729,6 @@ th, td {
 
 th.disabled, td.disabled {
 	opacity: 0.5;
-}
-
-td:nth-child(even) {
-	background-color: rgba(0,0,0,0.1);
 }
 
 .debug-tab--views > div.half {
@@ -820,5 +820,15 @@ td:nth-child(even) {
 		min-width: 175px !important;
 		text-align: center;
 		display: inline-block;
+	}
+}
+
+@media all and (max-height: 500px) {
+	.CodeMirror {
+		height: calc(97vh - 3em) !important;		
+	}
+
+	#tabber {
+		display: none !important;
 	}
 }
