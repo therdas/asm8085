@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Untitled Assembly File | 8085 Assembler</title>
+	<title>Neutrino•8085 Assembler</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<meta name="theme-color" content="#202020"/>
 	<meta name="mobile-web-app-capable" content="yes">
 	<link href="https://fonts.googleapis.com/css?family=Roboto:400,400i|Roboto+Mono:300,400,400i,700|Rubik+Mono+One&display=swap" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
       rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="css/assembler.css">
 	<link rel="stylesheet" type="text/css" href="js/codemirror/theme/material-darker.css">
@@ -30,29 +30,29 @@
 </head>
 <body>
 	<div id="toolbar" class="disable-selection">
-		<i class="material-icons md-24" id="new-file--button">note_add</i>
-		<i class="material-icons md-24" id="open-file--button">open_in_browser</i>
-		<i class="material-icons md-24" id="save-file--button">save_alt</i>
+		<i class="material-icons-outlined md-24" id="new-file--button">note_add</i>
+		<i class="material-icons-outlined md-24" id="open-file--button">open_in_browser</i>
+		<i class="material-icons-outlined md-24" id="save-file--button">save_alt</i>
 		<span class="divider"></span>
-		<i class="material-icons md-24" id="undo--button">undo</i>
-		<i class="material-icons md-24 disabled" id="redo--button">redo</i>
+		<i class="material-icons-outlined md-24" id="undo--button">undo</i>
+		<i class="material-icons-outlined md-24 disabled" id="redo--button">redo</i>
 		<span class="divider"></span>
-		<i class="material-icons md-24" id="search--button">search</i>
-		<i class="material-icons md-24" id="goto--button">my_location</i>
+		<i class="material-icons-outlined md-24" id="search--button">search</i>
+		<i class="material-icons-outlined md-24" id="goto--button">my_location</i>
 		<span class="divider"></span>
-		<i class="material-icons md-24" id="assemble--button">offline_bolt</i>
-		<i class="material-icons md-24 disabled" id="listing--button">list_alt</i>
-		<i class="material-icons md-24 disabled" id="emulate--button">fast_forward</i>
-		<i class="material-icons md-24" id="insert-breakpoint--button">fiber_manual_record</i>
+		<i class="material-icons-outlined md-24" id="assemble--button">offline_bolt</i>
+		<i class="material-icons-outlined md-24 disabled" id="listing--button">list_alt</i>
+		<i class="material-icons-outlined md-24 disabled" id="emulate--button">fast_forward</i>
+		<i class="material-icons-outlined md-24" id="insert-breakpoint--button">fiber_manual_record</i>
 		<span class="divider"></span>
-		<i class="material-icons md-24" id="indent-now--button">format_indent_increase</i>
+		<i class="material-icons-outlined md-24" id="indent-now--button">format_indent_increase</i>
 		<i id="autoindent-enable--button" class=""> 
-			<b class="material-icons md-24">format_indent_increase</b>
-			<b class="material-icons md-18">autorenew</b>
+			<b class="material-icons-outlined md-24">format_indent_increase</b>
+			<b class="material-icons-outlined md-18">autorenew</b>
 		</i>
 
-		<i class="material-icons md-24 last">help</i>
-		<i class="material-icons md-24" id="more-menu--button">more_vert</i>
+		<i class="material-icons-outlined md-24 last">help_outline</i>
+		<i class="material-icons-outlined md-24" id="more-menu--button">more_vert</i>
 	</div>
 
 	<div id="more-menu" class="disable-selection hidden">
@@ -61,21 +61,21 @@
 	</div>
 
 	<div id="about" class="modal disable-selection hidden">
-		<span class="header">About mode85<span class="material-icons md-18">close</span></span>
+		<span class="header">About mode85<span class="material-icons-outlined md-18">close</span></span>
 		<span class="buttons">
 			<button type="reset" id="about--cancel-button">Close</button>
 		</span>
 	</div>
 
 	<div id="bug-report" class="modal hidden">
-		<span class="header disable-selection">Report a bug...<span class="material-icons md-18">close</span></span>
+		<span class="header disable-selection">Report a bug...<span class="material-icons-outlined md-18">close</span></span>
 		<span class="buttons disable-selection">
 			<button type="reset" id="bug-report--cancel-button">Close</button>
 		</span>
 	</div>
 
 	<div id="open-file" class="modal disable-selection hidden">
-		<span class="header">Open File<span class="material-icons md-18">close</span></span>
+		<span class="header">Open File<span class="material-icons-outlined md-18">close</span></span>
 		<input type="file" id="file-uploader" name="file-upload"/>
 		<span id="open-file--warn" class="warn"></span>
 		<span class="buttons">
@@ -85,7 +85,7 @@
 	</div>
 
 	<div id="save-file" class="modal disable-selection hidden">
-		<span class="header">Save File<span class="material-icons md-18">close</span></span>
+		<span class="header">Save File<span class="material-icons-outlined md-18">close</span></span>
 		<label for="save-file--filename" class="padleft">Name</label>
 		<input type="text" id="save-file--filename" placeholder="filename.a85" /><br/><br/>
 		<input type="checkbox" id="save-file--unroll-dup"/> 
@@ -104,7 +104,7 @@
 	</div>
 
 	<div id="new-file" class="modal disable-selection hidden">
-		<span class="header">New File<span class="material-icons md-18">close</span></span>
+		<span class="header">New File<span class="material-icons-outlined md-18">close</span></span>
 		<span class="text">Delete this document and create a new document?</span>
 		<span class="buttons">
 			<button type="reset" id="new-file--cancel-button">Cancel</button>
@@ -116,7 +116,7 @@
 	<div id="modal-shade" class="hidden"></div>
 	
 	<div id="sidebar" class="sidebar hidden">
-		<span id="label" class="disable-selection">Assembled listing<i id="sidebar--close-button" class="material-icons md-18">close</i></span>
+		<span id="label" class="disable-selection">Assembled listing<i id="sidebar--close-button" class="material-icons-outlined md-18">close</i></span>
 		<table id="listing-table">
 			<tr><td class="disable-selsudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'ection">Assemble to see listing</td></tr>
 		</table>
@@ -139,28 +139,30 @@
 		</div>
 		<div class="tabber-view disable-selection hidden" id="tabber-view--preprocessor">
 			<span class="tabber-view--top-banner">
-				<input type="checkbox" id="preprocessor-view--isEnabled" checked="true">
+				<input type="checkbox" id="preprocessor-view--isEnabled" checked="true" disabled="true">
 				<label for="preprocessor-view--isEnabled">Enable Preprocessing during assembly</label>
 			</span>
-			<span class="tabber-view--top-banner-compensator">#</span>
+			<span class="tabber-view--top-banner-compensator">&nbsp;</span>
+			<span class="tabber-view--container">
+				<span class="label">Upcoming feature</span>
+				<span>These options will be supported in an upcoming version!</span>
+			</span>
 			<span class="tabber-view--container">
 				<span class="label">Manual Controls</span>
-				<button id="preprocessor-view--doPreprocess">Preprocess</button>
+				<button id="preprocessor-view--doPreprocess" disabled="true">Preprocess</button>
 				<button id="preprocessor-view--doRevert" disabled="true">Revert</button>
 			</span>
 			<span class="tabber-view--container">
 				<span class="label">Options</span>
-				<input type="checkbox" id="preprocessor-view--isDup" checked="true" />&nbsp;<label for="preprocessor-view--isDup">Allow expansion of DUPs</label> <br/>
-				<input type="checkbox" id="preprocessor-view--isMacro" checked="true" />&nbsp;<label for="preprocessor-view--isMacro">Allow expansion of MACROs</label> <br/>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="preprocessor-view--isMangle" checked="true" />&nbsp;<label for="preprocessor-view--isMacro">Mangle macro locals <br class="mob"/>starting with a "/"</label> <br/>
+				<input type="checkbox" id="preprocessor-view--isDup" checked="true" disabled="true"/>&nbsp;<label for="preprocessor-view--isDup">Allow expansion of DUPs</label> <br/>
+				<input type="checkbox" id="preprocessor-view--isMacro" checked="true" disabled="true"/>&nbsp;<label for="preprocessor-view--isMacro">Allow expansion of MACROs</label> <br/>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="preprocessor-view--isMangle" checked="true" disabled="true"/>&nbsp;<label for="preprocessor-view--isMacro">Mangle macro locals <br class="mob"/>starting with a "/"</label> <br/>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="preprocessor-view--isDetectLoop" disabled="true"/>&nbsp;<label for="preprocessor-view--isDetectLoop">Detect loops</label> <br/>
-				<input type="checkbox" id="preprocessor-view--isExperimental" disabled="true"/>&nbsp;<label for="preprocessor-view--isExperimental">Enable Experimental Features</label> <br/>
-				<span class="infobox">
-					<i class="material-icons md-18" id="new-file--button">info</i>
-					Conditional Assembly is not yet implemented, but will be coming soon.
-					Head over to the Debugging tab for info on what's being assembled.
-				</span>
+				<input type="checkbox" id="preprocessor-view--isExperimental" disabled="true"/>&nbsp;<label for="preprocessor-view--isExperimental" >Enable Experimental Features</label> <br/>
 			</span>
+				<br/>
+				<br/>
+				<br/>
 		</div>
 		<div class="tabber-view hidden" id="tabber-view--debug">
 			<span class="tabs disable-selection" id="tabber-debug--tabs">

@@ -2,7 +2,7 @@
 
 var buttons = {
 	inputKeys: document.getElementsByClassName('keypad-button'),
-	registers: ['A', 'B', 'C', 'D', 'E', 'F', 'H', 'L', 'PC', 'SP'],
+	registers: ['A', 'B', 'C', 'D', 'E', 'F', 'H', 'L', 'PCL', 'PCH', 'SPL', 'SPH'],
 	specialKeys: {
 		dcr:  document.getElementById('button-DCR'),
 		inr:  document.getElementById('button-INR'),
@@ -53,7 +53,7 @@ buttons.setup = function(e) {
 				}
 
 				displayCells.setAddress(conversion.pad(tx, 4, ' '));
-				displayCells.setData(registers.getRegister(tx));
+				displayCells.setData(registers.getRegister(tx).slice(-2));
 			}
 
 			console.log(buttons.inputKeys[i].textContent.trim());
@@ -76,7 +76,12 @@ buttons.setup = function(e) {
 			registerCurrent = displayCells.getAddress().trim();
 			registerNext = buttons.registers[buttons.registers.indexOf(registerCurrent) > 0 ? buttons.registers.indexOf(registerCurrent) - 1 : 0];
 			displayCells.setAddress(conversion.pad(registerNext, 4, ' '));
-			displayCells.setData(registers.getRegister(registerNext));
+			if(registerNext == 'SPH' || registerNext == 'PCH')
+				displayCells.setData(registers.getPair(registerNext.slice(0,2)).slice(0,2));
+			else if(registerNext == 'SPL' || registerNext == 'PCL')
+				displayCells.setData(registers.getPair(registerNext.slice(0,2)).slice(-2));
+			else
+				displayCells.setData(registers.getRegister(registerNext));
 		}else{
 			displayCells.setData();
 			displayCells.setAddress('Err ');
@@ -94,7 +99,12 @@ buttons.setup = function(e) {
 			registerCurrent = displayCells.getAddress().trim();
 			registerNext = buttons.registers[buttons.registers.indexOf(registerCurrent) < buttons.registers.length - 1 && buttons.registers.indexOf(registerCurrent) > -1 ? buttons.registers.indexOf(registerCurrent) + 1 : buttons.registers.length - 1];
 			displayCells.setAddress(conversion.pad(registerNext, 4, ' '));
-			displayCells.setData(registers.getRegister(registerNext));
+			if(registerNext == 'SPH' || registerNext == 'PCH')
+				displayCells.setData(registers.getPair(registerNext.slice(0,2)).slice(0,2));
+			else if(registerNext == 'SPL' || registerNext == 'PCL')
+				displayCells.setData(registers.getPair(registerNext.slice(0,2)).slice(-2));
+			else
+				displayCells.setData(registers.getRegister(registerNext));
 		} else {
 			displayCells.setData();
 			displayCells.setAddress('Err ');

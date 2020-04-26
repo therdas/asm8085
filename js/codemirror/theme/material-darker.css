@@ -5,26 +5,26 @@
 */
 
 .cm-s-material-darker.CodeMirror {
-  background-color: #212121;
+  background-color: rgba(0,7,5,0.87);
   color: #EEFFFF;
    font-size: 1.5em;
 }
 
 .cm-s-material-darker .CodeMirror-gutters {
-  background: #212121;
+  background-color: rgba(0,7,5,0);
   color: #545454;
   border: none;
    padding-left: 0.7em; padding-right:0.1em;
 }
 
 .cm-s-material-darker .CodeMirror-line { 
-  padding-left: 0.5em !important; 
 }
 
 .cm-s-material-darker .CodeMirror-guttermarker,
 .cm-s-material-darker .CodeMirror-guttermarker-subtle,
 .cm-s-material-darker .CodeMirror-linenumber {
-  color: #545454;
+  margin-left: -0.7em;
+  padding-left: 1em;
 }
 
 .cm-s-material-darker .CodeMirror-cursor {
@@ -52,11 +52,11 @@
 }
 
 .cm-s-material-darker .CodeMirror-activeline-background {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .cm-s-material-darker .cm-keyword {
-  color: #C792EA;
+  color: #9dc8a0;
 }
 
 .cm-s-material-darker .cm-operator {
@@ -81,7 +81,7 @@
 }
 
 .cm-s-material-darker .cm-number {
-  color: #FF5370;
+  color: #5f9aa3;
 }
 
 .cm-s-material-darker .cm-def {
@@ -89,11 +89,11 @@
 }
 
 .cm-s-material-darker .cm-string {
-  color: #C3E88D;
+  color: #d7504f;
 }
 
 .cm-s-material-darker .cm-string-2 {
-  color: #f07178;
+  color: #d7504f;
 }
 
 .cm-s-material-darker .cm-comment {

@@ -26,16 +26,15 @@ var target = document.querySelector('#code-editor');
 
 CodeMirror.defineSimpleMode("asm8085", {
 	start: [
-		{regex: /\b(org|equ|=|def|ddef|defarr|macro|dup|endm|endd|if|endif|else|elif|brk|ORG|EQU|=|DEF|DDEF|DEFARR|MACRO|DUP|ENDM|ENDD|IF|ENDIF|ELSE|ELIF|BRK)\b/, token:"variable"},
-		{regex: /\b(LXI|STAX|INX|INR|DCR|MVI|RAL|DAD|RIM|SHLD|DAA|SIM|STA|STC|MOV|HLT|ADD|ADC|SUB|SBB|ACI|ADI|ANA|ANI|CALL|CC|CM|CMA|CMC|CMP|CNC|CNZ|CP|CPE|CPI|CPO|CZ|DCX|DI|EI|IN|JC|JM|JMP|JNC|JNZ|JP|JPE|JPO|JZ|LDA|LDAX|LHLD|NOP|ORA|ORI|OUT|PCHL|POP|PUSH|RAR|RC|RET|RLC|RM|RNC|RNZ|RP|RPE|RPO|RRC|RST|RZ|SBI|SPHL|SUI|XCHG|XRA|XRI|XTHL|lxi|stax|inx|inr|dcr|mvi|ral|dad|rim|shld|daa|sim|sta|stc|mov|hlt|add|adc|sub|sbb|aci|adi|ana|ani|call|cc|cm|cma|cmc|cmp|cnc|cnz|cp|cpe|cpi|cpo|cz|dcx|di|ei|in|jc|jm|jmp|jnc|jnz|jp|jpe|jpo|jz|lda|ldax|lhld|nop|ora|ori|out|pchl|pop|push|rar|rc|ret|rlc|rm|rnc|rnz|rp|rpe|rpo|rrc|rst|rz|sbi|sphl|sui|xchg|xra|xri|xthl)\b/, token:"keyword"},
+		{regex: /\b(ORG|EQU|IF|ELIF|ELSE|ENDIF|=|DUP|DEF|DEFARR|DDEF|org|equ|if|elif|else|endif|=|dup|def|defarr|ddef|LXI|STAX|INX|INR|DCR|MVI|RAL|DAD|RIM|SHLD|DAA|SIM|STA|STC|MOV|HLT|ADD|ADC|SUB|SBB|ACI|ADI|ANA|ANI|CALL|CC|CM|CMA|CMC|CMP|CNC|CNZ|CP|CPE|CPI|CPO|CZ|DCX|DI|EI|IN|JC|JM|JMP|JNC|JNZ|JP|JPE|JPO|JZ|LDA|LDAX|LHLD|NOP|ORA|ORI|OUT|PCHL|POP|PUSH|RAR|RC|RET|RLC|RM|RNC|RNZ|RP|RPE|RPO|RRC|RST|RZ|SBI|SPHL|SUI|XCHG|XRA|XRI|XTHL|lxi|stax|inx|inr|dcr|mvi|ral|dad|rim|shld|daa|sim|sta|stc|mov|hlt|add|adc|sub|sbb|aci|adi|ana|ani|call|cc|cm|cma|cmc|cmp|cnc|cnz|cp|cpe|cpi|cpo|cz|dcx|di|ei|in|jc|jm|jmp|jnc|jnz|jp|jpe|jpo|jz|lda|ldax|lhld|nop|ora|ori|out|pchl|pop|push|rar|rc|ret|rlc|rm|rnc|rnz|rp|rpe|rpo|rrc|rst|rz|sbi|sphl|sui|xchg|xra|xri|xthl)\b/, token:"keyword"},
 		{regex: /\b[0-9a-fA-F]+(H|h)?\b/, token:"number"},
 		{regex: /\b([A-Ea-eHLhlMm]|SP|sp|PSW|psw)\b/, token: "number"},
-		{regex: /\b[0-9A-F]+\b/, token:"number"},
 		{regex: /\".*\"/, token: "variable"},
 		{regex: /\'.*\'/, token: "variable"},
+		{regex: /\#[^ ]*\b/, token: "number"},
 		{regex: /\b\w+\b/, token:"normal"},
-		{regex: /[\s\S]*:/, token:"string", dedent:true},
-		{regex: /;[\s\S]*/, token: "comment"}
+		{regex: /[\S\s]*\:/, token:"string", dedent:true},
+		{regex: /\;[\s\S]*/, token: "comment"}
 	],
 	meta: {
 		lineComment: ";",
@@ -166,9 +165,9 @@ function readFile(event) {
 		var file = event.target.files[0];
 		var ext = file.name.split('.').slice(-1)[0];
 
-		if(!['txt', 'asm', 'test', 'a85'].includes(ext)){
+		if(!['txt'].includes(ext)){
 			file = undefined;
-			document.querySelector('#open-file--warn').textContent = "Invalid file extension! Choose a file with .txt or .a85 extension."
+			document.querySelector('#open-file--warn').textContent = "Invalid file extension! Choose a file with .txt extension."
 			document.querySelector('#open-file--submit-button').disabled = true;
 			isReadyForInput = false;
 			return;
@@ -207,8 +206,8 @@ function saveFile() {
 	var name = document.querySelector('#save-file--filename').value;
 	var ext = name.split('.').slice(-1)[0];
 
-	if(!['a85', 'asm', 'test'].includes(ext)) {
-		document.querySelector('#save-file--warn').textContent = 'File Extension must be .a85.';
+	if(!['txt'].includes(ext)) {
+		document.querySelector('#save-file--warn').textContent = 'File Extension must be .txt, for compatibility.';
 		return;
 	}
 	var copy = editor.doc.getValue();
@@ -230,7 +229,6 @@ function saveFile() {
 
 	var blob = new Blob([toSave], {type: 'text/plain;charset=utf-8'});
 	saveAs(blob, name);
-	document.querySelector('title').textContent = name + '| a85 8085 macro assembler';
 	document.querySelector('#modal-shade').click();
 }
 
@@ -587,6 +585,7 @@ function compileCode() {
 			}
 		}
 		document.querySelector('#listing-table').innerHTML = totalListing;
+		document.querySelector('#sidebar').classList.remove('hidden');
 	}
 
 	/*for(var i = 0; i < total.debug.listing.length; ++i) {
@@ -635,6 +634,7 @@ function compileCode() {
 	stateObject.errors.length == 0 ? document.querySelector('#emulate--button').classList.remove('disabled') : false;
 
 	return stateObject.errors.length == 0;
+
 }
 
 document.querySelector('#preprocessor-view--doPreprocess').addEventListener('click', (e) => compileCode(true));

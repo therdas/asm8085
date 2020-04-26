@@ -39,6 +39,7 @@ loader.extractAsByte = function () {
 }
 
 window.addEventListener('load', (e) => {
+	document.querySelector('#assembler--button').style.display = "none";
 	var url = window.location.href;
 	if(url.indexOf('?code=') == -1) {
 		return;
