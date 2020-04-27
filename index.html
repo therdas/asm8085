@@ -24,6 +24,8 @@
 		<a href="coder.html">ASSEMBLER</a>
 	</div>
 	<div id="load-code" class="toast hidden">Loaded code!</div>
+	<div id="toast" class="toast-black hidden">Loaded code!</div>
+
 	<div id="wrapper">
 	<div class="display-helper--container">
 		<div class="display">
@@ -137,6 +139,9 @@
 	<script type="text/javascript" src="js/runner/loader.js"></script>
 	<script type="text/javascript" src="js/runner/runner.js"></script>
 
+	<!-- For Reading and Saving files -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
+
 	<!-- Allow RST1 and RST5 and RST7 to halt program as in kit -->
 	<script type="text/javascript">
 		memory.writeAt('0008', 'C9');
@@ -151,9 +156,9 @@
 		}
 	</script>
 
+	<input type="file" id="file-uploader" name="file-upload" style="height:10px !important; opacity: 0; pointer-events: none;"/>	
+
 	<!-- Implement sharing, saving, loading -->
-	<script type="text/javascript">
-		
-	</script>
+	<script src="js/emulator/stateSave.js"></script>
 </body>
 </html>

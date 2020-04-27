@@ -553,7 +553,7 @@ function compileCode(preOnly) {
 
 	if(stateObject.errors.length == 0) {
 		finalCode = {
-			list: stateObject.listing,
+			listing: stateObject.listing,
 			breakpoints: stateObject.breakPointTable
 		};
 	}
