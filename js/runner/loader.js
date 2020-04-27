@@ -19,8 +19,8 @@ loader.__testObject4 = JSON.parse('{"list":{"F500":"0A","F501":"49","F502":"52",
   }
 */
 loader.load = function (listingobj) {
-	for(var location in listingobj.list) {
-		memory.writeAt(location, listingobj.list[location]);
+	for(var location in listingobj.listing) {
+		memory.writeAt(location, listingobj.listing[location]);
 	}
 
 	for(var location in listingobj.breakpoints) {
@@ -39,16 +39,17 @@ loader.extractAsByte = function () {
 }
 
 window.addEventListener('load', (e) => {
-	document.querySelector('#assembler--button').style.display = "none";
 	var url = window.location.href;
-	if(url.indexOf('?code=') == -1) {
+	if(url.indexOf('?listing=') == -1) {
 		return;
 	}
 	
-	var start = url.indexOf('?code=') + 6;
+	var start = url.indexOf('?listing=') + 9;
+	console.log("RECEIVED ", decodeURIComponent(url.slice(start)));
 	var obj = JSON.parse(decodeURIComponent(url.slice(start)));
 	loader.load(obj);
 
+	document.querySelector('#assembler--button').style.display = "none";
 	document.getElementById('load-code').classList.remove('hidden');
 	window.setTimeout(()=>document.getElementById('load-code').classList.add('hidden'), 2000);
 })

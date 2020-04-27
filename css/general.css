@@ -444,7 +444,7 @@ h1 > a:active {
 	transition: all 0.2s ease-in-out;
 }
 
-.hidden {
+.toast.hidden {
 	top: -10em;
 }
 

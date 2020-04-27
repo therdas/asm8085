@@ -11,7 +11,7 @@
 </head>
 <body>
 	<h1><b>8085•Neutrino</b> Runtime 
-		<a href="coder.html" id="assembler--button">Compiler</a>
+		<a href="coder.html" id="assembler--button">ASSEMBLER</a>
 		<a class="material-icons md-24" id="open-file--button" onclick="openMemory()">open_in_browser</a>
 		<a class="material-icons md-24" id="save-file--button" onclick="saveMemory()">save_alt</a>
 		<a class="material-icons md-24" id="open-file--button" onclick="shareMemory()">share</a>
@@ -21,18 +21,18 @@
 		<a class="material-icons md-24" id="open-file--button" onclick="shareMemory()">share</a>
 		<a class="material-icons md-24" id="save-file--button" onclick="saveMemory()">save_alt</a>
 		<a class="material-icons md-24" id="open-file--button" onclick="openMemory()">open_in_browser</a>
-		<a href="coder.html">Compiler</a>
+		<a href="coder.html">ASSEMBLER</a>
 	</div>
-	<div id="load-code"class="toast hidden">Loaded code!</div>
+	<div id="load-code" class="toast hidden">Loaded code!</div>
 	<div id="wrapper">
 	<div class="display-helper--container">
 		<div class="display">
-			<input onClick="this.select(); buttons.setMode('inputAddress');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-0" maxlength="1" placeholder="R" />
-			<input onClick="this.select(); buttons.setMode('inputAddress');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-1" maxlength="1" placeholder="E" />
-			<input onClick="this.select(); buttons.setMode('inputAddress');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-2" maxlength="1" placeholder="A" />
-			<input onClick="this.select(); buttons.setMode('inputAddress');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-3" maxlength="1" placeholder="D" />
-			<input onClick="this.select(); buttons.setMode('inputData');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-4" maxlength="1" placeholder="Y" />
-			<input onClick="this.select(); buttons.setMode('inputData');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-5" maxlength="1" placeholder="!" />
+			<input onClick="this.select(); buttons.setMode('inputAddress');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-0" maxlength="1"  />
+			<input onClick="this.select(); buttons.setMode('inputAddress');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-1" maxlength="1"  />
+			<input onClick="this.select(); buttons.setMode('inputAddress');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-2" maxlength="1"  />
+			<input onClick="this.select(); buttons.setMode('inputAddress');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-3" maxlength="1"  />
+			<input onClick="this.select(); buttons.setMode('inputData');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-4" maxlength="1"  />
+			<input onClick="this.select(); buttons.setMode('inputData');" onfocus="blur();" class="display-cell" type="text" value="" id="data-input-5" maxlength="1"  />
 		</div>
 		<div class="helper-text">
 			<span class="helper" id="helper-main">
@@ -100,21 +100,6 @@
 	</div>
 	</div>
 	
-	<script type="text/javascript">
-		function fix()
-		{
-			window.alert('uash');
-		    var el = this;
-		    var par = el.parentNode;
-		    var next = el.nextSibling;
-		    par.removeChild(el);
-		    setTimeout(function() {par.insertBefore(el, next);}, 0)
-		}
-		function toggleMenu() {
-			document.querySelector('#menu').classList.toggle('menu-hidden');
-		}
-	</script>
-
 	<script type="text/javascript" src="js/assembler/expr-eval.js"></script>
 	<script type="text/javascript" src="js/assembler/textParser.js"></script>
 	<script type="text/javascript" src="js/assembler/preprocessor.js"></script>
@@ -157,7 +142,18 @@
 		memory.writeAt('0008', 'C9');
 		memory.writeAt('0028', 'C9');
 		memory.writeAt('0038', 'C9');
+		displayCells.setAddress('READ');
+		displayCells.setData('Y!');
 		console.log("Fixed RSTs");
+
+		function toggleMenu() {
+			document.querySelector('#menu').classList.toggle('menu-hidden');
+		}
+	</script>
+
+	<!-- Implement sharing, saving, loading -->
+	<script type="text/javascript">
+		
 	</script>
 </body>
 </html>

@@ -34,7 +34,7 @@ CodeMirror.defineSimpleMode("asm8085", {
 		{regex: /\'.*\'/, token: "variable"},
 		{regex: /\#[^ ]*\b/, token: "number"},
 		{regex: /\b\w+\b/, token:"normal"},
-		{regex: /[\S\s]*\:/, token:"string", dedent:true},
+		{regex: /[\S\s]*\:/, token:"label", dedent:true},
 		{regex: /\;[\s\S]*/, token: "comment"}
 	],
 	meta: {
@@ -154,37 +154,26 @@ function showModal(name) {
 }
 
 function readFile(event) {
-	if(event === undefined) {
-		if(isReadyForInput) {
-			editor.setValue(fileAtInput);
-			flask.updateCode(fileAtInput);
-			document.querySelector('#modal-shade').click();
-		}
-		isReadyForInput = false;
-		document.querySelector('#open-file--submit-button').disabled = true;
-	} else {
-		document.querySelector('#open-file--warn').textContent = '';
-		var file = event.target.files[0];
-		var ext = file.name.split('.').slice(-1)[0];
+	document.querySelector('#open-file--warn').textContent = '';
+	var file = event.target.files[0];
+	var ext = file.name.split('.').slice(-1)[0];
 
-		if(!['txt'].includes(ext)){
-			file = undefined;
-			document.querySelector('#open-file--warn').textContent = "Invalid file extension! Choose a file with .txt extension."
-			document.querySelector('#open-file--submit-button').disabled = true;
-			isReadyForInput = false;
-			return;
-		}
-
-		var reader = new FileReader;
-		reader.addEventListener('load', () => {
-			fileAtInput = reader.result;
-			console.log(fileAtInput, 'enabling...');
-			document.querySelector('#open-file--submit-button').disabled = false;
-			isReadyForInput = true;
-		})
-
-		reader.readAsText(file, 'UTF-8');
+	if(!['txt'].includes(ext)){
+		document.querySelector('#toast').textContent = "Invalid file extension! Choose a file with .txt extension."
+		document.getElementById('toast').classList.remove('hidden');
+		window.setTimeout(()=>document.getElementById('toast').classList.add('hidden'), 4000);
+		return;
 	}
+
+	var reader = new FileReader;
+	reader.addEventListener('load', () => {
+		fileAtInput = reader.result;
+		console.log(fileAtInput, 'enabling...');
+		document.querySelector('#open-file--submit-button').disabled = false;
+		editor.doc.setValue(reader.result);
+		flask.updateCode(reader.result);
+	})
+	reader.readAsText(file, 'UTF-8');
 }
 
 function initSearch(){
@@ -254,6 +243,51 @@ function newFile() {
 	editor.setValue('');
 }
 
+function copyTextToClipboard(text) {
+  var textArea = document.createElement("textarea");
+  textArea.value = text;
+  
+  // Avoid scrolling to bottom
+  textArea.style.top = "0";
+  textArea.style.left = "0";
+  textArea.style.position = "fixed";
+
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+
+  try {
+    var successful = document.execCommand('copy');
+    var msg = successful ? 'successful' : 'unsuccessful';
+    console.log('Fallback: Copying text command was ' + msg);
+  } catch (err) {
+    console.error('Fallback: Oops, unable to copy', err);
+  }
+
+  document.body.removeChild(textArea);
+}
+
+function shareFile(e) {
+	var _doc;
+	
+	if(usingFlask)
+		_doc = flask.getCode();
+	else
+		_doc = editor.doc.getValue();
+
+	if(navigator.share) {
+		navigator.share({
+			title: 'Neutrino 8085 Assembler',
+			url: 'https://therdas.github.io/neutrinoURLRedir/?codeString=' + encodeURIComponent('"' + _doc + '"')
+		})
+	} else {
+		copyTextToClipboard('https://therdas.github.io/neutrinoURLRedir/?codeString=' + encodeURIComponent('"' + _doc + '"'));
+		document.querySelector('#toast').textContent = "Sharable link copied to clipboard!";
+		document.querySelector('#toast').classList.remove('hidden');
+		setTimeout( e => document.querySelector('#toast').classList.add('hidden'), 4000);
+	}
+}
+
 function toggleAutoIndent() {
 	document.querySelector('#autoindent-enable--button').classList.toggle('soft-disabled');
 	autoIndent = !autoIndent;
@@ -295,8 +329,15 @@ function redo() {
 }
 
 document.querySelector('#more-menu--button').addEventListener('click', showMenu);
-document.querySelector('#open-file--button').addEventListener('click', (e) => showModal('open-file'));
+
+//File upload
+document.querySelector('#open-file--button').addEventListener('click', e => document.querySelector('#file-uploader').click());
+document.querySelector('#file-uploader').addEventListener('change', readFile);
+
+//File save
 document.querySelector('#save-file--button').addEventListener('click', (e) => showModal('save-file'));
+
+
 document.querySelector('#new-file--button').addEventListener('click', (e) => showModal('new-file'));
 document.querySelector('#open-file--submit-button').addEventListener('click', (e) => readFile());
 document.querySelector('#save-file--submit-button').addEventListener('click', (e) => saveFile());
@@ -312,6 +353,7 @@ document.querySelector('#redo--button').addEventListener('click', (e) => redo())
 document.querySelector('#search--button').addEventListener('click', (e) => initSearch());
 document.querySelector('#goto--button').addEventListener('click', (e) => goto());
 document.querySelector('#file-uploader').addEventListener('change', readFile);
+document.querySelector('#share-file--button').addEventListener('click', shareFile);
 
 document.querySelector('#about--button').addEventListener('click', (e)=> {showModal('about'); hideMenu()});
 document.querySelector('#bug-report--button').addEventListener('click', (e)=> {showModal('bug-report'); hideMenu()});
@@ -633,7 +675,7 @@ function encodeDocument() {
 
 function goToRunner(code) {
 	var urlBase = window.location.origin;
-	var goto = urlBase + '/?code='+ code;
+	var goto = urlBase + '/?listing='+ code;
 	return goto;
 }
 

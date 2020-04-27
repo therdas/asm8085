@@ -63,6 +63,7 @@ var breakpoints = {}
 
 //Function to add a breakpoint
 breakpoints.addBreakpoint = function (at) {
+	console.log("ADDED BREAKPOINT @ ", at);
 	__break_pts.push(at);
 }	
 

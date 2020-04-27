@@ -30,6 +30,7 @@
 
 </head>
 <body>
+	<div id="toast" class="toast hidden">Loaded code!</div>
 	<div id="toolbar" class="disable-selection">
 		<i class="material-icons-outlined md-24" id="new-file--button">note_add</i>
 		<i class="material-icons-outlined md-24" id="open-file--button">open_in_browser</i>
@@ -214,5 +215,33 @@
 	<script type="text/javascript" src="js/assembler/dup.js"></script>
 	<script type="text/javascript" src="js/assembler/comment.js"></script>
 	<script type="text/javascript" src="js/assembler/symbol.js"></script>
+	<!-- Runs after page load, checks for loaded document -->
+	<script type="text/javascript">
+		(function() {
+			var url = window.location.href;
+			if(url.indexOf('?codeString=') == -1) {
+				return;
+			}
+			
+			var start = url.indexOf('?codeString=') + 12;
+			console.log("RECEIVED ", decodeURIComponent(url.slice(start)));
+			var obj = decodeURIComponent(url.slice(start)).toString().slice(1,-1).split('\\n').join('\n').split('\\"').join('"');
+
+			function setCode(text){
+				try {
+					flask.updateCode(text);
+					editor.doc.setValue(text);
+					console.log("setCode done");
+				} catch (err) {
+					console.log("Trying again!");
+					setTimeout(e => setCode(text), 80);
+				}
+			}
+			setCode(obj);
+
+			document.getElementById('toast').classList.remove('hidden');
+			window.setTimeout(()=>document.getElementById('toast').classList.add('hidden'), 2000);
+		})();
+	</script>
 </body>
 </html>

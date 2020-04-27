@@ -112,9 +112,10 @@ buttons.setup = function(e) {
 	});
 
 	buttons.specialKeys.exec.addEventListener('click', (e) => {
-		if(buttons.mode != 'inputAddressExec') {
+		if(buttons.mode != 'inputAddressExec' && buttons.mode != 'stepThrough') {
 			displayCells.setData();
 			displayCells.setAddress('Err ');
+			buttons.mode = 'inputAddressExec';
 		} else {
 			var address = displayCells.getAddress();
 			runner.runFrom(address, false);

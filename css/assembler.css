@@ -36,6 +36,26 @@ html, body {
 	transition: all 0.5s ease-in-out;
 }
 
+.toast {
+	background-color: rgba(0,0,0,0.8);
+	color: rgba(255,255,255,0.8);
+	padding: 1em;	
+	top: 4.5em;
+	left: calc(50vw - 200px);
+	width: 400px;
+	box-sizing: border-box;
+	text-align: center;
+	border-radius: 3px;
+	box-shadow: 0 4px 6px rgba(0,0,0,0.2), 0 6px 10px rgba(0,0,0,0.1);
+	position: fixed;
+	z-index: 40;
+	transition: all 0.2s ease-in-out;
+}
+
+.toast.hidden {
+	top: -10em;
+}
+
 #toolbar {
 	height: 3em;
 	position: relative;
@@ -55,7 +75,7 @@ html, body {
 	display: inline-block;
 	height: 3em;
 	box-sizing: border-box;
-	padding: 0.4em 0.3em;
+	padding: 0.5em 0.3em 0.4em 0.3em;
 	position: relative;
 	transition: all 0.1s ease-in-out; 
 	cursor: default;
@@ -751,6 +771,10 @@ th.disabled, td.disabled {
 	display: none;
 }
 
+#mobile-code-editor, .codeflask, .codeflask__textarea {
+	display: none;
+}
+
 
 @media all and (max-width: 910px) {
 	.mob {
@@ -778,6 +802,7 @@ th.disabled, td.disabled {
 
 	/*Code Flask*/
 	#mobile-code-editor, .codeflask, .codeflask__textarea {
+		display: block;
 		height: calc(55vh - 3em) !important; 
 		font-size: 1em !important;
 		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
@@ -798,20 +823,6 @@ th.disabled, td.disabled {
 
 	/*CodeFlask styling*/
 
-
-
-	/*.codeflask__textarea, textarea, pre {
-		overflow:scroll;
-	}
-
-	textarea {
-		color:rgba(0,0,0,0) !important;
-	}
-
-	.codeflask__pre.codeflask__flatten, .codeflask__lines{
-		width: auto !important;
-	}
-	*/
 	.codeflask.codeflask--has-line-numbers:before{background-color:rgba(0,0,0,0.1) !important;}.codeflask {  background: rgba(0,7,5,0.87);  color: #bbbbbb;}.token.punctuation {  color: #a1a1a1;}.codeflask .token.keywords {  color: #9dc8a0;}.token.operator {  color: #bcbcbc;}.token.string {  color: #d7504f;}.token.comment {  color: #777777;}.token.function {  color: #037d9e;}.token.boolean {  color: #b059ff;}.token.number {  color: #5f9aa3;}.token.selector {  color: #b059ff;}.token.property {  color: #b059ff;}.token.tag {  color: #b059ff;}.token.attr-value {  color: #b059ff;}
 
 
