@@ -1,1 +1,4 @@
-This is a comprehensive emulator and assembler for the 8085 microprocessor.
+This is an 8085 Emulator deployed on the web for testing/practising - https://8085.preztyl.tech
+The repo has been tweaked and optimized a little to deploy to my own domain to make it publicly available.
+
+This is a fork of therdas/asm8085, credits to the respective owners.

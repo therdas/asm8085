@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>8085 Emulator</title>
+	<title>8085 Emulator | Preztyl</title>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Condensed:400|Roboto+Mono:300,400,400i,700&display=swap" rel="stylesheet">
@@ -10,18 +11,16 @@
 	<link rel="stylesheet" type="text/css" href="css/general.css">
 </head>
 <body>
-	<h1><b>8085•Neutrino</b> Runtime 
-		<a href="coder.html" id="assembler--button">ASSEMBLER</a>
-		<a class="material-icons md-24" id="open-file--button" onclick="openMemory()">open_in_browser</a>
-		<a class="material-icons md-24" id="save-file--button" onclick="saveMemory()">save_alt</a>
-		<a class="material-icons md-24" id="open-file--button" onclick="shareMemory()">share</a>
+	<h1><b>8085 • Preztyl</b> Simulator
+		<a class="material-icons md-24" id="open-file--button" onclick="openMemory()" title="Import configurations">open_in_browser</a>
+		<a class="material-icons md-24" id="save-file--button" onclick="saveMemory()" title="Export current configurations">save_alt</a>
+		<a class="material-icons md-24" id="open-file--button" onclick="shareMemory()" title="Share">share</a>
 		<a class="material-icons md-24 mobile-only" id="menu--button" onclick="toggleMenu()">menu</a>
 	</h1>
 	<div id="menu" class="menu-hidden">
 		<a class="material-icons md-24" id="open-file--button" onclick="shareMemory()">share</a>
 		<a class="material-icons md-24" id="save-file--button" onclick="saveMemory()">save_alt</a>
 		<a class="material-icons md-24" id="open-file--button" onclick="openMemory()">open_in_browser</a>
-		<a href="coder.html">ASSEMBLER</a>
 	</div>
 	<div id="load-code" class="toast hidden">Loaded code!</div>
 	<div id="toast" class="toast-black hidden">Loaded code!</div>
@@ -51,22 +50,22 @@
 	</div>
 	<div class="register-buttons--container">
 		<div class="keypad-buttons--container">
-			<span class="keypad-button" ontouch="fix" id="button-C"> C </span>
-			<span class="keypad-button" onfocus="blur()" id="button-D"> D </span>
-			<span class="keypad-button" onfocus="blur()" id="button-E"> E </span>
-			<span class="keypad-button" onfocus="blur()" id="button-F"> F </span>
-			<span class="keypad-button" onfocus="blur()" id="button-8"> 8 </span>
-			<span class="keypad-button" id="button-9"> 9 </span>
-			<span class="keypad-button" id="button-A"> A </span>
-			<span class="keypad-button" id="button-B"> B </span>
-			<span class="keypad-button" id="button-4"> 4 </span>
-			<span class="keypad-button" id="button-5"> 5 </span>
-			<span class="keypad-button" id="button-6"> 6 </span>
-			<span class="keypad-button" id="button-7"> 7 </span>
-			<span class="keypad-button" id="button-0"> 0 </span>
-			<span class="keypad-button" id="button-1"> 1 </span>
-			<span class="keypad-button" id="button-2"> 2 </span>
-			<span class="keypad-button" id="button-3"> 3 </span>
+			<span class="keypad-button" ontouch="fix" id="button-C" accesskey="v"> C </span>
+			<span class="keypad-button" onfocus="blur()" id="button-D" accesskey="d"> D </span>
+			<span class="keypad-button" onfocus="blur()" id="button-E" accesskey="e"> E </span>
+			<span class="keypad-button" onfocus="blur()" id="button-F" accesskey="f"> F </span>
+			<span class="keypad-button" onfocus="blur()" id="button-8" accesskey="8"> 8 </span>
+			<span class="keypad-button" id="button-9" accesskey="9"> 9 </span>
+			<span class="keypad-button" id="button-A" accesskey="a"> A </span>
+			<span class="keypad-button" id="button-B" accesskey="b"> B </span>
+			<span class="keypad-button" id="button-4" accesskey="4"> 4 </span>
+			<span class="keypad-button" id="button-5" accesskey="5"> 5 </span>
+			<span class="keypad-button" id="button-6" accesskey="6"> 6 </span>
+			<span class="keypad-button" id="button-7" accesskey="7"> 7 </span>
+			<span class="keypad-button" id="button-0" accesskey="0"> 0 </span>
+			<span class="keypad-button" id="button-1" accesskey="1"> 1 </span>
+			<span class="keypad-button" id="button-2" accesskey="2"> 2 </span>
+			<span class="keypad-button" id="button-3" accesskey="3"> 3 </span>
 		</div>
 		<div class="extra-buttons--container">
 			<span class="extra-button" id="button-RES">  <u>R</u>ES  </span>
@@ -147,9 +146,8 @@
 		memory.writeAt('0008', 'C9');
 		memory.writeAt('0028', 'C9');
 		memory.writeAt('0038', 'C9');
-		displayCells.setAddress('READ');
-		displayCells.setData('Y!');
-		console.log("Fixed RSTs");
+		displayCells.setAddress('FRIE');
+		displayCells.setData('ND');
 
 		function toggleMenu() {
 			document.querySelector('#menu').classList.toggle('menu-hidden');
@@ -160,5 +158,7 @@
 
 	<!-- Implement sharing, saving, loading -->
 	<script src="js/emulator/stateSave.js"></script>
+	<div style="  margin: auto;width: 50%;padding: 10px;">This is an Open Source Project available on GitHub: <a href="https://github.com/kartikjain14/asm8085" style="color:rgb(11,192,164);">KartikJain14/asm8085</a>.</div>
+
 </body>
 </html>
