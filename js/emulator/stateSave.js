@@ -89,10 +89,10 @@ function shareMemory(event) {
 	if(navigator.share) {
 		navigator.share({
 			title: 'Neutrino 8085 Assembler',
-			url: currentURL + '/?listing=' + uri
+			url: currentURL + '?listing=' + uri
 		});
 	} else {
-		copyTextToClipboard(currentURL + '/?listing=' + uri);
+		copyTextToClipboard(currentURL + '?listing=' + uri);
 		document.querySelector('#load-code').textContent = "Sharable link copied to clipboard!";
 		document.querySelector('#load-code').classList.add('shareOverride');
 		document.querySelector('#load-code').classList.remove('hidden');
