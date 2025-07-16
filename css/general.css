@@ -1,8 +1,3 @@
-@font-face {
-	font-family: 'LCDMono2 Light';
-	src: url('../font/lcdmonolight.ttf');
-}
-
 /* Rules for sizing the icon. */
 .material-icons { font-size: 18px !important; }
 .material-icons.md-24 { font-size: 24px; }
@@ -113,7 +108,7 @@ h1 > a:active {
 }
 
 .display > input {
-	font-family: 'LCDMono2 Light', 'Courier New', monospace, sans-serif;
+	font-family: 'DotGothic16', 'Courier New', monospace, sans-serif;
 
 	border: none;
 	border-right: 1px solid rgba(255,255,255,0.02);
